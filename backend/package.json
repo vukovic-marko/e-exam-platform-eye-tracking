@@ -1,0 +1,24 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Backend application for E-exam web platform with eye-tracking.",
+  "main": "main.js",
+  "repository": "https://github.com/vukovic-marko/projekat-sotis",
+  "author": "Marko Vuković",
+  "license": "MIT",
+  "scripts": {
+    "serve": "nodemon app.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "cookie-parser": "^1.4.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.11.20",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}
