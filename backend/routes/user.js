@@ -8,9 +8,13 @@ const Teacher = require('../model/Teacher')
 
 const { createAccessToken, createRefreshToken } = require('../utils/createToken')
 const { verifyAccessToken, verifyRefreshToken } = require('../utils/verifyToken')
+
+const { validateLogin, validateRegistration } = require('../validation/authentication')
+
 router.post('/register', async (req, res) => {
 
-  // ADD VALIDATION
+  const { error } = validateRegistration(req.body);
+  if (error) return res.status(400).send({ msg: error.details });
 
   const usernameExists = await User.findOne({username: req.body.username});
   if (usernameExists) return res.status(400).send('Username already taken.')
@@ -29,7 +33,8 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
 
-  // ADD VALIDATION
+  const { error } = validateLogin(req.body);
+  if (error) return res.status(400).send({ msg: error.details });
 
   const user = await User.findOne({username: req.body.username});
   if (!user) return res.status(400).send('Username and/or password error.');
