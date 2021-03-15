@@ -6,7 +6,8 @@ const cookie = require('cookie-parser')
 
 const app = express();
 
-const userRoute = require('./routes/user')
+const user = require('./routes/user')
+const test = require('./routes/test')
 
 const port = process.env.PORT || 3000 // load port as an environment variable or use default "3000"
 
@@ -25,8 +26,11 @@ app.use(express.json())
 // ENABLE COOKIE PARSER
 app.use(cookie())
 
-// ROUTE /user REQUESTS TO userRoute
-app.use('/user', userRoute)
+// ROUTE /user REQUESTS TO user
+app.use('/user', user)
+
+// ROUTE /test REQUESTS TO test
+app.use('/test', test)
 
 // LISTEN ON SPECIFIED PORT
 app.listen(port, () => {
