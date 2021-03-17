@@ -7,12 +7,11 @@ const Student = require('../model/Student')
 const Teacher = require('../model/Teacher')
 
 const { createAccessToken, createRefreshToken } = require('../utils/createToken')
-
-// TODO IMPLEMENT REFRESHING OF A TOKEN
 const { verifyRefreshToken } = require('../utils/verifyToken')
 
 const { validateLogin, validateRegistration } = require('../validation/authentication')
 
+// REGISTER STUDENT
 router.post('/register', async (req, res) => {
 
   const { error } = validateRegistration(req.body);
@@ -33,6 +32,7 @@ router.post('/register', async (req, res) => {
   }
 })
 
+// LOGIN
 router.post('/login', async (req, res) => {
 
   const { error } = validateLogin(req.body);
@@ -48,8 +48,8 @@ router.post('/login', async (req, res) => {
   
   const accessToken = createAccessToken(user._id, user.role);
   const refreshToken = createRefreshToken(user._id, sessionId);
-
-  await User.findOneAndUpdate({username: req.body.username}, {sessionId: sessionId}, {returnOriginal: true, useFindAndModify: false});
+  
+  await User.findByIdAndUpdate(req.body._id, {sessionId: sessionId}, {returnOriginal: true, useFindAndModify: false});
 
   let date = new Date();
   date.setDate(date.getDate() + 1);
@@ -58,11 +58,13 @@ router.post('/login', async (req, res) => {
   res.status(200).send({accessToken: accessToken});
 })
 
-// REFRESH
+// REFRESH ACCESS TOKEN
 router.post('/refresh', verifyRefreshToken, async (req, res) => {
+  
   const user = await User.findById(req.user._id);
   if (!user) return res.status(400).send({ msg: 'Request not valid.' });
-  if (user.sessionId !== req.user.sessionId) return res.status(401).send({ msg: 'Request not valid.' })
+  
+  // if (user.sessionId !== req.user.sessionId) return res.status(401).send({ msg: 'Request not valid.' })
 
   const refreshedAccessToken = createAccessToken(user._id, user.role);
   const refreshedRefreshToken = createRefreshToken(user._id, user.sessionId);
@@ -76,11 +78,11 @@ router.post('/refresh', verifyRefreshToken, async (req, res) => {
 
 // LOGOUT
 router.post('/logout', verifyRefreshToken, async (req,res) => {
+  
   await User.findByIdAndUpdate(req.user._id, {$unset: {sessionId: 1}}, {returnOriginal: true, useFindAndModify: false});
 
   res.clearCookie('re-to', {expires: new Date(), httpOnly: true, path: "/user", domain: "localhost"})
   res.send()
-  
 })
 
 module.exports = router

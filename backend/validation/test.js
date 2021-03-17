@@ -1,5 +1,18 @@
 const Joi = require('joi');
 
+const validateGetTests = data => {
+    const schema = Joi.object({
+        page: Joi.number()
+                 .greater(0)
+                 .required(),
+        limit: Joi.number()
+                  .greater(0)
+                  .required()
+    });
+
+    return schema.validate(data, {abortEarly: false});
+}
+
 const validateCreateTest = data => {
 
     const answers = Joi.object().keys({
@@ -43,3 +56,4 @@ const validateCreateTest = data => {
 }
 
 module.exports.validateCreateTest = validateCreateTest;
+module.exports.validateGetTests = validateGetTests;

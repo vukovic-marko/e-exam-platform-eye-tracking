@@ -1,31 +1,87 @@
 const router = require('express').Router();
 
 const Test = require('../model/Test');
+const SubmittedTest = require('../model/SubmittedTest')
 
 const { verifyAccessToken } = require('../utils/verifyToken')
 
 const { verifyTeacher, verifyStudent } = require('../utils/verifyUser')
 
-const { validateCreateTest } = require('../validation/test')
+const { validateCreateTest, validateGetTests } = require('../validation/test')
 
+// CREATE TEST (ONLY FOR TEACHERS)
 router.post('/create', verifyAccessToken, verifyTeacher, async (req, res) => {
 
   const { error } = validateCreateTest(req.body);
   if (error) return res.status(400).send({ msg: error.details });
 
-    try {
-      const test = new Test(req.body)
+  try {
+    const test = new Test(req.body)
+
+    test.test_points = test.questions.reduce((temp, current) => temp + current.points, 0);
+    test.teacher = (({_id, username}) => ({_id, username}))(req.teacher);
+
+    await test.save();
+    res.status(200).send(test);
+  } catch (err) {    
+    res.status(400).send(err);
+  }
+})
+
+// GET ALL TESTS (FOR ALL REGISTERED USERS)
+// ONLY RETURNS TEST ID, TITLE, MAXIMUM NUMBER OF POINTS AND TEACHER INFORMATION
+router.get('/', verifyAccessToken, (req, res) => {
+  const { error } = validateGetTests(req.query);
+  if (error) return res.status(400).send({msg: error.details });
   
-      test.test_points = test.questions.reduce((temp, current) => temp + current.points, 0);
-      test.teacher = (({_id, username}) => ({_id, username}))(req.teacher);
+  try {
+    Test.paginate({}, { page: req.query.page, limit: req.query.limit }).then(result => {
+      if (result.totalPages < result.page) {
+        return res.status(404).send('Page does not exist.')
+      }
 
-      await test.save();
-      res.status(200).send(test);
-    } catch (err) {
-      console.log(err);
-      
-      res.status(400).send(err);
+      result.docs.forEach(test => {
+        test.questions = undefined;
+      })
+
+      res.status(200).send(result);
+    })
+  } catch(err) {
+    res.status(400).send(err);
+  }
+})
+
+// START TEST should actually be GET /:id but for students only
+router.get('/:id/start', verifyAccessToken, verifyStudent, async (req, res) => {
+  try {
+    const test = await Test.findById(req.params.id.toString());
+    
+    let submittedTest = await SubmittedTest.findOne({ "student._id" : req.student.id, "test._id" : test._id });
+    
+    if (!submittedTest) {
+      submittedTest = new SubmittedTest({
+        student: {
+          _id: req.student._id,
+          username: req.student.username
+        },
+        test: test,
+        started_at: new Date()
+      }); 
+
+      await submittedTest.save();
     }
-  })
 
-  module.exports = router
+    test.questions.forEach(question => {
+      question.answers.forEach(answer => {
+        answer.correct = undefined;
+      })
+    })
+    
+    res.status(200).send(test);
+  } catch(err) {
+    res.status(400).send({ msg: err });
+  }
+  
+})
+
+module.exports = router

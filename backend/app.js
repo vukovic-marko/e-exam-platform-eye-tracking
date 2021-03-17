@@ -23,6 +23,7 @@ db.on('error', console.error.bind(console, 'Connection error:'));
 
 // ENABLE JSON PARSER FOR REQUEST BODY PARAMS
 app.use(express.json())
+
 // ENABLE COOKIE PARSER
 app.use(cookie())
 

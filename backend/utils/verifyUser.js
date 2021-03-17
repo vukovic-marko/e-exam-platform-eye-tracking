@@ -13,7 +13,6 @@ const verifyTeacher = async (req, res, next) => {
 
 const verifyStudent = async (req, res, next) => {
     const student = await Student.findById(req.user._id);
-    console.log(student);
 
     if (!student) return res.status(401).send('Unauthorized');
 
