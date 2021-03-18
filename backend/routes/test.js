@@ -7,7 +7,7 @@ const { verifyAccessToken } = require('../utils/verifyToken')
 
 const { verifyTeacher, verifyStudent } = require('../utils/verifyUser')
 
-const { validateCreateTest, validateGetTests } = require('../validation/test')
+const { validateCreateTest, validateGetTests, validateSubmitAnswers } = require('../validation/test')
 
 // CREATE TEST (ONLY FOR TEACHERS)
 router.post('/create', verifyAccessToken, verifyTeacher, async (req, res) => {
@@ -82,6 +82,31 @@ router.get('/:id/start', verifyAccessToken, verifyStudent, async (req, res) => {
     res.status(400).send({ msg: err });
   }
   
+})
+
+// SUBMIT ANSWERS (for students only)
+router.post('/:id', verifyAccessToken, verifyStudent, async (req, res) => {
+
+  console.log(req.body);
+  console.log(validateSubmitAnswers(req.body));
+  
+  const { error } = validateSubmitAnswers(req.body);
+  if (error) return res.status(400).send({ msg: error.details });
+
+  try {
+    let submittedTest = await SubmittedTest.findOne({ "student._id" : req.student.id, "test._id" : req.params.id.toString() });
+    if (!submittedTest) return res.status(400).send('Cannot submit answers without opening it first.');
+    if (submittedTest.submitted_at) return res.status(400).send('Answers already submitted.');
+
+    submittedTest.submitted_answers = req.body.answers;
+    submittedTest.submitted_at = new Date();
+    await submittedTest.save();
+
+    res.status(200).send('Answers submitted successfully.')
+
+  } catch(err) {
+    res.status(400).send({ msg: err });
+  }
 })
 
 module.exports = router

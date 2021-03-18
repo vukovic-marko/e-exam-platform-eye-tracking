@@ -55,5 +55,32 @@ const validateCreateTest = data => {
     return schema.validate(data, {abortEarly: false});
 }
 
-module.exports.validateCreateTest = validateCreateTest;
+const validateSubmitAnswers = data => {
+    const gaze_data = Joi.object({
+        x: Joi.number()
+              .required(),
+        y: Joi.number()
+              .required()
+    })
+    
+    const answers = Joi.object({
+        no: Joi.number()
+               .greater(0)
+               .required(),
+        answer: Joi.string(),
+        gaze_data: Joi.array()
+                      .items(gaze_data)
+    })
+    
+    const schema = Joi.object({
+        answers: Joi.array()
+                    .items(answers)
+                    .required()
+    });
+
+    return schema.validate(data, {abortEarly: false});
+}
+
 module.exports.validateGetTests = validateGetTests;
+module.exports.validateCreateTest = validateCreateTest;
+module.exports.validateSubmitAnswers = validateSubmitAnswers;
