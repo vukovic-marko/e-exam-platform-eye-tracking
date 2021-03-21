@@ -54,7 +54,33 @@ const schema = mongoose.Schema({
             }],
             points: {
                 type: Number
-            }
+            },
+            areas_of_interest: [{
+                caption: {
+                    type: String,
+                    required: true
+                },
+                top_left: {
+                    x1: {
+                        type: Number,
+                        required: true,
+                    },
+                    y1: {
+                        type: Number,
+                        required: true
+                    }
+                },
+                bottom_right: {
+                    x2: {
+                        type: Number,
+                        required: true
+                    },
+                    y2: {
+                        type: Number,
+                        required: true
+                    }
+                }
+            }]
         }],
         test_points: {
             type: Number
@@ -74,11 +100,13 @@ const schema = mongoose.Schema({
             // not required in case the test is essay or mixed type
         },
         gaze_data: [{
-            x: {
-                type: Number
+            GazeX: {
+                type: Number,
+                required: true
             },
-            y: {
-                type: Number
+            GazeY: {
+                type: Number,
+                required: true
             }
         }]
     }],

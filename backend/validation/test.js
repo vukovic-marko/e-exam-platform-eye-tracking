@@ -25,6 +25,29 @@ const validateCreateTest = data => {
                     .required()
     });
 
+    const areas_of_interest = Joi.object().keys({
+        caption: Joi.string()
+                    .required(),
+        top_left: Joi.object()
+                     .keys({
+                        x1: Joi.number()
+                                .greater(0)
+                                .required(),
+                        y1: Joi.number()
+                                .greater(0)
+                                .required()    
+                     }),
+        bottom_right: Joi.object()
+                         .keys({
+                            x2: Joi.number()
+                                .greater(0)
+                                .required(),
+                            y2: Joi.number()
+                                .greater(0)
+                                .required()    
+                        })
+    })
+
     const questions = Joi.object().keys({
         no: Joi.number()
               .greater(0)
@@ -37,7 +60,9 @@ const validateCreateTest = data => {
                     .required(),
         points: Joi.number()
                     .greater(0)
-                    .required()
+                    .required(),
+        areas_of_interest: Joi.array()
+                               .items(areas_of_interest)
     });
 
 
@@ -57,9 +82,9 @@ const validateCreateTest = data => {
 
 const validateSubmitAnswers = data => {
     const gaze_data = Joi.object({
-        x: Joi.number()
+        GazeX: Joi.number()
               .required(),
-        y: Joi.number()
+        GazeY: Joi.number()
               .required()
     })
     

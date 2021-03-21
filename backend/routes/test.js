@@ -86,9 +86,6 @@ router.get('/:id/start', verifyAccessToken, verifyStudent, async (req, res) => {
 
 // SUBMIT ANSWERS (for students only)
 router.post('/:id', verifyAccessToken, verifyStudent, async (req, res) => {
-
-  console.log(req.body);
-  console.log(validateSubmitAnswers(req.body));
   
   const { error } = validateSubmitAnswers(req.body);
   if (error) return res.status(400).send({ msg: error.details });
