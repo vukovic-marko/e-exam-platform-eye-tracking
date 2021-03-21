@@ -123,8 +123,13 @@ router.post('/:id', verifyAccessToken, verifyStudent, async (req, res) => {
     submittedTest.points = points;
     submittedTest.submitted_at = new Date();
     await submittedTest.save();
-
+    
     submittedTest.test.questions = undefined;
+    submittedTest.submitted_answers.forEach(item => {
+      item.answer_id = undefined;
+      item.answer = undefined;
+      item.gaze_data = undefined;
+    });
 
     res.status(200).send(submittedTest);
 
