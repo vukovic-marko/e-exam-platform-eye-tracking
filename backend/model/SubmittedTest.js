@@ -35,16 +35,10 @@ const schema = mongoose.Schema({
             required: true
         },
         questions: [{
-            no: {
-                type: Number
-            },
             question: {
                 type: String
             },
             answers: [{
-                no: {
-                    type: Number
-                },
                 answer: {
                     type: String
                 },
@@ -87,9 +81,12 @@ const schema = mongoose.Schema({
         }
     },
     submitted_answers: [{
-        no: {
-            type: Number//,
-            // required: true
+        question_id: {
+            type: String,
+            required: true
+        },
+        answer_id: {
+            type: String
         },
         answer: {
             type: String//,
@@ -108,7 +105,10 @@ const schema = mongoose.Schema({
                 type: Number,
                 required: true
             }
-        }]
+        }],
+        correct: {
+            type: Boolean
+        }
     }],
     started_at: {
         type: Date,
@@ -116,6 +116,9 @@ const schema = mongoose.Schema({
     },
     submitted_at: {
         type: Date
+    },
+    points: {
+        type: Number
     }
 })//, options)
 

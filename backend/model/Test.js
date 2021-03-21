@@ -22,16 +22,10 @@ const schema = mongoose.Schema({
         required: true
     },
     questions: [{
-        no: {
-            type: Number
-        },
         question: {
             type: String
         },
         answers: [{
-            no: {
-                type: Number
-            },
             answer: {
                 type: String
             },

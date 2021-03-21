@@ -16,9 +16,6 @@ const validateGetTests = data => {
 const validateCreateTest = data => {
 
     const answers = Joi.object().keys({
-        no: Joi.number()
-               .greater(0)
-               .required(),
         answer: Joi.string()
                    .required(),
         correct: Joi.boolean()
@@ -49,9 +46,6 @@ const validateCreateTest = data => {
     })
 
     const questions = Joi.object().keys({
-        no: Joi.number()
-              .greater(0)
-              .required(),
         question: Joi.string()
                     .required(),
         answers: Joi.array()
@@ -89,9 +83,10 @@ const validateSubmitAnswers = data => {
     })
     
     const answers = Joi.object({
-        no: Joi.number()
-               .greater(0)
-               .required(),
+        _id: Joi.string(),
+        question_id: Joi.string()
+                        .required(),
+        answer_id: Joi.string(),
         answer: Joi.string(),
         gaze_data: Joi.array()
                       .items(gaze_data)
@@ -99,6 +94,7 @@ const validateSubmitAnswers = data => {
     
     const schema = Joi.object({
         answers: Joi.array()
+                    .min(1)
                     .items(answers)
                     .required()
     });

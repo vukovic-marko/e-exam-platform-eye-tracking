@@ -10,6 +10,7 @@ const { verifyTeacher, verifyStudent } = require('../utils/verifyUser')
 const { validateCreateTest, validateGetTests, validateSubmitAnswers } = require('../validation/test')
 
 // CREATE TEST (ONLY FOR TEACHERS)
+// TODO ONLY ONE ANSWER IN A QUESTION CAN BE CORRECT!
 router.post('/create', verifyAccessToken, verifyTeacher, async (req, res) => {
 
   const { error } = validateCreateTest(req.body);
@@ -51,8 +52,9 @@ router.get('/', verifyAccessToken, (req, res) => {
   }
 })
 
-// START TEST should actually be GET /:id but for students only
-router.get('/:id/start', verifyAccessToken, verifyStudent, async (req, res) => {
+// GET TEST (also logs when the student first loaded the test)
+// for students only
+router.get('/:id', verifyAccessToken, verifyStudent, async (req, res) => {
   try {
     const test = await Test.findById(req.params.id.toString());
     
@@ -75,6 +77,7 @@ router.get('/:id/start', verifyAccessToken, verifyStudent, async (req, res) => {
       question.answers.forEach(answer => {
         answer.correct = undefined;
       })
+      question.areas_of_interest = undefined;
     })
     
     res.status(200).send(test);
@@ -84,22 +87,46 @@ router.get('/:id/start', verifyAccessToken, verifyStudent, async (req, res) => {
   
 })
 
-// SUBMIT ANSWERS (for students only)
+// SUBMIT ANSWERS 
+// for students only
 router.post('/:id', verifyAccessToken, verifyStudent, async (req, res) => {
   
   const { error } = validateSubmitAnswers(req.body);
   if (error) return res.status(400).send({ msg: error.details });
 
   try {
-    let submittedTest = await SubmittedTest.findOne({ "student._id" : req.student.id, "test._id" : req.params.id.toString() });
+    let submittedTest = await SubmittedTest.findOne({ "student._id" : req.student._id, "test._id" : req.params.id.toString() });
     if (!submittedTest) return res.status(400).send('Cannot submit answers without opening it first.');
     if (submittedTest.submitted_at) return res.status(400).send('Answers already submitted.');
 
+    if (submittedTest.test.questions.length !== req.body.answers.length) return res.status(400).send('Number of answers does not match with the number of questions.');
+
+    let points = 0;
+
+    submittedTest.test.questions.forEach((question, idx) => {
+      const correct_answer = question.answers.filter(answer => answer.correct === true)[0];
+      
+      if (question._id.toString() !== req.body.answers[idx].question_id.toString())
+        return res.status(400).send('Question and submitted answer id mismatch.');
+
+      if (correct_answer._id.toString() === req.body.answers[idx].answer_id.toString()) {
+        // CORRECT ANSWER
+        points += question.points;
+        req.body.answers[idx].correct = true;
+      } else {
+        // INCORRECT ANSWER
+        req.body.answers[idx].correct = false;
+      }
+    })
+
     submittedTest.submitted_answers = req.body.answers;
+    submittedTest.points = points;
     submittedTest.submitted_at = new Date();
     await submittedTest.save();
 
-    res.status(200).send('Answers submitted successfully.')
+    submittedTest.test.questions = undefined;
+
+    res.status(200).send(submittedTest);
 
   } catch(err) {
     res.status(400).send({ msg: err });
