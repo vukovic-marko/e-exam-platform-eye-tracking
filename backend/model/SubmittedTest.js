@@ -107,6 +107,52 @@ const schema = mongoose.Schema({
                 required: true
             }
         }],
+        crunched_gaze_data: {
+            sequence: [
+                {
+                    id: {
+                        type: String,
+                        // required: true
+                    },
+                    caption: {
+                        type: String,
+                        // required: true
+                    },
+                    count: {
+                        type: Number,
+                        // required: true
+                    },
+                    percentage: {
+                        type: Number,
+                        // required: true
+                    }
+                }
+            ],
+            sequence_length: {
+                type: Number,
+                // required: true
+            },
+            summary: [
+                {
+                    id: {
+                        type: String,
+                        // required: true
+                    },
+                    caption: {
+                        type: String,
+                        // required: true
+                    },
+                    count: {
+                        type: Number,
+                        // required: true
+                    },
+                    percentage: {
+                        type: Number,
+                        // required: true
+                    }
+                }
+            ],
+        },
         correct: {
             type: Boolean
         }

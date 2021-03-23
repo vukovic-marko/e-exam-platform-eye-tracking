@@ -3,6 +3,8 @@ const router = require('express').Router();
 const Test = require('../model/Test');
 const SubmittedTest = require('../model/SubmittedTest')
 
+const { crunchData } = require('../utils/crunchData')
+
 const { verifyAccessToken } = require('../utils/verifyToken')
 
 const { verifyTeacher, verifyStudent, verifyUser } = require('../utils/verifyUser')
@@ -35,8 +37,6 @@ router.get('/', verifyAccessToken, verifyUser, async (req, res) => {
   
   try {
 
-    // TEACHER CAN SEE ONLY TESTS HE CREATED
-    // STUDENTS CAN SEE TESTS BY ALL TEACHERS
     let query = {}
     if (req.user.role === 'teacher') {
       query["teacher._id"] = req.user._id;
@@ -158,6 +158,19 @@ router.post('/:id', verifyAccessToken, verifyStudent, async (req, res) => {
     submittedTest.submitted_answers = req.body.answers;
     submittedTest.points = points;
     submittedTest.submitted_at = new Date();
+
+    // TODO ONLY IF GAZE DATA PROVIDED TEST
+    submittedTest.test.questions.forEach((e,i) => {
+      const { sequence, sequence_length, summary } = crunchData(e.areas_of_interest, submittedTest.submitted_answers[i].gaze_data);
+
+      submittedTest.submitted_answers[i].crunched_gaze_data = {
+        sequence: sequence,
+        sequence_length: sequence_length,
+        summary: summary
+      }
+
+    })
+
     await submittedTest.save();
     
     submittedTest.test.questions = undefined;
@@ -201,10 +214,8 @@ router.post('/', verifyAccessToken, verifyTeacher, async (req, res) => {
 // --------------------------------------------------------------------------------------------
 // TEACHERS CAN SEE ANSWERS AND EYE MOVEMENT DATA FOR A SINGLE STUDENT FOR A SINGLE TEST
 router.get('/result/:id', verifyAccessToken, verifyTeacher, async (req, res) => {
-
   // TODO TREBALO BI DA IDE PROVERA DA SE VRATI ERROR AKO TEACHER POKUSA DA PRISTUPI PODACIMA DRUGOG TEACHERA
   // TRENUTNO SE VRACA PRAZNA LISTA ZA TAKVE UPITE
-
   if (!req.params.id) return res.status(400).send({ msg: "Test id is missing." });
 
   const submittedTestId = req.params.id;

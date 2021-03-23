@@ -4,7 +4,6 @@ const { v4 } = require('uuid')
 
 const User = require('../model/User')
 const Student = require('../model/Student')
-const Teacher = require('../model/Teacher')
 
 const { createAccessToken, createRefreshToken } = require('../utils/createToken')
 const { verifyRefreshToken } = require('../utils/verifyToken')
