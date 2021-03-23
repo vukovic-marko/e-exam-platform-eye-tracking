@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const mongoosePaginate = require('mongoose-paginate-v2');
 
 // const options = {
 //     discriminatorKey: 'role'
@@ -121,5 +122,7 @@ const schema = mongoose.Schema({
         type: Number
     }
 })//, options)
+
+schema.plugin(mongoosePaginate);
 
 module.exports = mongoose.model('SubmittedTest', schema)

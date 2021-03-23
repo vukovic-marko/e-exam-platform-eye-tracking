@@ -5,7 +5,7 @@ const SubmittedTest = require('../model/SubmittedTest')
 
 const { verifyAccessToken } = require('../utils/verifyToken')
 
-const { verifyTeacher, verifyStudent } = require('../utils/verifyUser')
+const { verifyTeacher, verifyStudent, verifyUser } = require('../utils/verifyUser')
 
 const { validateCreateTest, validateGetTests, validateSubmitAnswers } = require('../validation/test')
 
@@ -31,12 +31,22 @@ router.post('/create', verifyAccessToken, verifyTeacher, async (req, res) => {
 
 // GET ALL TESTS (FOR ALL REGISTERED USERS)
 // ONLY RETURNS TEST ID, TITLE, MAXIMUM NUMBER OF POINTS AND TEACHER INFORMATION
-router.get('/', verifyAccessToken, (req, res) => {
+// TEACHER CAN SEE ONLY TESTS HE CREATED
+// STUDENTS CAN SEE TESTS BY ALL TEACHERS
+router.get('/', verifyAccessToken, verifyUser, async (req, res) => {
   const { error } = validateGetTests(req.query);
   if (error) return res.status(400).send({msg: error.details });
   
   try {
-    Test.paginate({}, { page: req.query.page, limit: req.query.limit }).then(result => {
+
+    // TEACHER CAN SEE ONLY TESTS HE CREATED
+    // STUDENTS CAN SEE TESTS BY ALL TEACHERS
+    let query = {}
+    if (req.user.role === 'teacher') {
+      query["teacher._id"] = req.user._id;
+    } 
+
+    Test.paginate(query, { page: req.query.page, limit: req.query.limit }).then(result => {
       if (result.totalPages < result.page) {
         return res.status(404).send('Page does not exist.')
       }
@@ -47,6 +57,52 @@ router.get('/', verifyAccessToken, (req, res) => {
 
       res.status(200).send(result);
     })
+  } catch(err) {
+    res.status(400).send(err);
+  }
+})
+
+// GETS LIST OF SUBMITTED TEST FOR TEACHERS
+router.get('/results/:id', verifyAccessToken, verifyTeacher, async (req, res) => {
+  
+  // TODO TREBALO BI DA IDE PROVERA DA SE VRATI ERROR AKO TEACHER POKUSA DA PRISTUPI PODACIMA DRUGOG TEACHERA
+  // TRENUTNO SE VRACA PRAZNA LISTA ZA TAKVE UPITE
+  
+  const { error } = validateGetTests(req.query);
+  if (error) return res.status(400).send({msg: error.details });
+  if (!req.params.id) return res.status(400).send({ msg: "Test id is missing." });
+  
+  const testId = req.params.id.toString();
+  
+  try {
+    SubmittedTest.paginate({ "test.teacher._id" : req.teacher._id, "test._id" : testId }, { page: req.query.page, limit: req.query.limit}).then(result => {
+      
+      result.docs.forEach(submittedTest => {
+        submittedTest.test.questions = undefined;
+        submittedTest.submitted_answers = undefined;
+      })
+    
+      return res.status(200).send(result);
+    });
+  } catch(err) {
+    res.status(400).send(err);
+  }
+})
+
+// SEE ONE SUBMITTED TEST (TEACHER)
+router.get('/submitted/:id', verifyAccessToken, verifyTeacher, async (req, res) => {
+
+  // TODO TREBALO BI DA IDE PROVERA DA SE VRATI ERROR AKO TEACHER POKUSA DA PRISTUPI PODACIMA DRUGOG TEACHERA
+  // TRENUTNO SE VRACA PRAZNA LISTA ZA TAKVE UPITE
+
+  if (!req.params.id) return res.status(400).send({ msg: "Test id is missing." });
+
+  const submittedTestId = req.params.id;
+
+  try {
+    const submittedTest = await SubmittedTest.findOne({ "test.teacher._id" : req.teacher._id, "_id" : submittedTestId });
+    
+    return res.status(200).send(submittedTest);
   } catch(err) {
     res.status(400).send(err);
   }
