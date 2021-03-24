@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken')
 
+// TODO ADD BEARER 
 const verifyAccessToken = (req, res, next) => {
     const token = req.header('Authorization');
     if (!token) return res.status(400).send('Access Denied');
@@ -13,6 +14,7 @@ const verifyAccessToken = (req, res, next) => {
     }
 }
 
+// TODO ADD BEARER
 const verifyRefreshToken = (req, res, next) => {
     const token = req.cookies['re-to'];
     if (!token) return res.status(401).send('Access Denied');

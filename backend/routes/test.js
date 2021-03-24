@@ -31,6 +31,9 @@ const { validateCreateTest, validateGetTests, validateSubmitAnswers } = require(
 // ONLY RETURNS TEST ID, TITLE, MAXIMUM NUMBER OF POINTS AND TEACHER INFORMATION
 // TEACHER CAN SEE ONLY TESTS TEACHER'S OWN TESTS
 // STUDENTS CAN SEE TESTS BY ALL TEACHERS
+//
+// TODO SAKRITI STUDENTIMA TESTOVE KOJE SU ZAVRSILI?
+//
 router.get('/', verifyAccessToken, verifyUser, async (req, res) => {
   const { error } = validateGetTests(req.query);
   if (error) return res.status(400).send({msg: error.details });
@@ -140,10 +143,10 @@ router.post('/:id', verifyAccessToken, verifyStudent, async (req, res) => {
     let points = 0;
 
     submittedTest.test.questions.forEach((question, idx) => {
-      const correct_answer = question.answers.filter(answer => answer.correct === true)[0];
+      const correct_answer = question.answers.find(answer => answer.correct === true);
       
       if (question._id.toString() !== req.body.answers[idx].question_id.toString())
-        return res.status(400).send('Question and submitted answer id mismatch.');
+        throw 'Question and submitted answer id mismatch.';
 
       if (correct_answer._id.toString() === req.body.answers[idx].answer_id.toString()) {
         // CORRECT ANSWER
@@ -159,7 +162,6 @@ router.post('/:id', verifyAccessToken, verifyStudent, async (req, res) => {
     submittedTest.points = points;
     submittedTest.submitted_at = new Date();
 
-    // TODO ONLY IF GAZE DATA PROVIDED TEST
     submittedTest.test.questions.forEach((e,i) => {
       const { sequence, sequence_length, summary } = crunchData(e.areas_of_interest, submittedTest.submitted_answers[i].gaze_data);
 
@@ -192,20 +194,32 @@ router.post('/:id', verifyAccessToken, verifyStudent, async (req, res) => {
 // --------------------------------------------------------------------------------------------
 // CREATES TEST
 router.post('/', verifyAccessToken, verifyTeacher, async (req, res) => {
-  // TODO ONLY ONE ANSWER IN A QUESTION CAN BE CORRECT!
+
   const { error } = validateCreateTest(req.body);
   if (error) return res.status(400).send({ msg: error.details });
 
   try {
+    req.body.questions.forEach(question => {
+      let correct_answers = 0;
+      question.answers.forEach(answer => {
+        if (answer.correct) {
+          correct_answers++;
+        }
+      })
+      if (correct_answers != 1) {
+        throw 'There must be one correct answer in every question!';
+      }
+    })
+
     const test = new Test(req.body)
 
     test.test_points = test.questions.reduce((temp, current) => temp + current.points, 0);
     test.teacher = (({_id, username}) => ({_id, username}))(req.teacher);
 
     await test.save();
-    res.status(200).send(test);
+    return res.status(200).send(test);
   } catch (err) {    
-    res.status(400).send(err);
+    return res.status(400).send(err);
   }
 })
 
