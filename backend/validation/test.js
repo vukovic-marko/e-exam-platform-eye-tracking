@@ -46,12 +46,15 @@ const validateCreateTest = data => {
     })
 
     const questions = Joi.object().keys({
+        type: Joi.string()
+                 .valid('MULTIPLE_CHOICE', 'ESSAY')
+                 .required(),
         question: Joi.string()
                     .required(),
         answers: Joi.array()
-                    .items(answers)
-                    .min(1)
-                    .required(),
+                    .items(answers),
+                    // .min(1)
+                    // .required(),
         points: Joi.number()
                     .greater(0)
                     .required(),

@@ -31,12 +31,20 @@ const schema = mongoose.Schema({
             type: String,
             required: true
         },
+        type: {
+            type: String,
+            enum: ['MULTIPLE_CHOICE', 'ESSAY'],
+            required: true
+        },
         title: {
             type: String,
             required: true
         },
         questions: [{
             question: {
+                type: String
+            },
+            questions_type: {
                 type: String
             },
             answers: [{

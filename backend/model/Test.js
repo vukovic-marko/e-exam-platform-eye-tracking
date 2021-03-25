@@ -17,12 +17,19 @@ const schema = mongoose.Schema({
             required: true
         }
     },
+    type: {
+        type: String,
+        required: true
+    },
     title: {
         type: String,
         required: true
     },
     questions: [{
         question: {
+            type: String
+        },
+        question_type: {
             type: String
         },
         answers: [{

@@ -13,6 +13,10 @@ const { verifyTeacher, verifyStudent, verifyUser } = require('../utils/verifyUse
 
 const { validateCreateTest, validateGetTests, validateSubmitAnswers } = require('../validation/test')
 
+const MULTIPLE_CHOICE = 'MULTIPLE_CHOICE';
+const ESSAY = 'ESSAY';
+const MIXED = 'MIXED';
+
 // --------------------------------------------------------------------------------------------
 //
 // student    GET   /test         get tests
@@ -138,24 +142,27 @@ router.post('/:id', verifyAccessToken, verifyStudent, asyncHandler(async (req, r
 
   let points = 0;
 
-  submittedTest.test.questions.forEach((question, idx) => {
-    const correct_answer = question.answers.find(answer => answer.correct === true);
-    
-    if (question._id.toString() !== req.body.answers[idx].question_id.toString())
-      throw createError(400, 'Question and submitted answer id mismatch.');
+    if (submittedTest.type === MULTIPLE_CHOICE) {
 
-    if (correct_answer._id.toString() === req.body.answers[idx].answer_id.toString()) {
-      // CORRECT ANSWER
-      points += question.points;
-      req.body.answers[idx].correct = true;
-    } else {
-      // INCORRECT ANSWER
-      req.body.answers[idx].correct = false;
-    }
-  })
+    submittedTest.test.questions.forEach((question, idx) => {
+      const correct_answer = question.answers.find(answer => answer.correct === true);
+      
+      if (question._id.toString() !== req.body.answers[idx].question_id.toString())
+        throw createError(400, 'Question and submitted answer id mismatch.');
+
+      if (correct_answer._id.toString() === req.body.answers[idx].answer_id.toString()) {
+        // CORRECT ANSWER
+        points += question.points;
+        req.body.answers[idx].correct = true;
+      } else {
+        // INCORRECT ANSWER
+        req.body.answers[idx].correct = false;
+      }
+    })
+    submittedTest.points = points;
+  }
 
   submittedTest.submitted_answers = req.body.answers;
-  submittedTest.points = points;
   submittedTest.submitted_at = new Date();
 
   submittedTest.test.questions.forEach((e,i) => {
@@ -191,17 +198,45 @@ router.post('/', verifyAccessToken, verifyTeacher, asyncHandler(async (req, res)
   const { error } = validateCreateTest(req.body);
   if (error) throw createError(400, error.details);
 
+  let count_multiple_choice = 0;
+  let count_essay = 0;
+
   req.body.questions.forEach(question => {
-    let correct_answers = 0;
-    question.answers.forEach(answer => {
-      if (answer.correct) {
-        correct_answers++;
+
+    if (question.type === MULTIPLE_CHOICE) {
+      count_multiple_choice++;
+      
+      if (!question.answers || question.answers.length < 2) throw createError(400, "Multiple choice questions must have at least two answers!");
+
+      let correct_answers = 0;
+      question.answers.forEach(answer => {
+        if (answer.correct) {
+          correct_answers++;
+        }
+      })
+      if (correct_answers != 1) {
+        throw createError(400, 'There must be one correct answer in every question!');
       }
-    })
-    if (correct_answers != 1) {
-      throw createError(400, 'There must be one correct answer in every question!');
-    }
+    } else if (question.type === ESSAY) count_essay++;
+
+    // let correct_answers = 0;
+    // question.answers.forEach(answer => {
+    //   if (answer.correct) {
+    //     correct_answers++;
+    //   }
+    // })
+    // if (correct_answers != 1) {
+    //   throw createError(400, 'There must be one correct answer in every question!');
+    // }
   })
+
+  if (count_multiple_choice && count_essay) {
+    req.body.type = MIXED;
+  } else if (count_multiple_choice) {
+    req.body.type = MULTIPLE_CHOICE;
+  } else if (count_essay) {
+    req.body.type = ESSAY;
+  }
 
   const test = new Test(req.body)
 
