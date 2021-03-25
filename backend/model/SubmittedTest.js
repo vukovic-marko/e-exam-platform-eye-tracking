@@ -133,6 +133,12 @@ const schema = mongoose.Schema({
                     percentage: {
                         type: Number,
                         // required: true
+                    },
+                    start: {
+                        type: Number,
+                    },
+                    end: {
+                        type: Number
                     }
                 }
             ],

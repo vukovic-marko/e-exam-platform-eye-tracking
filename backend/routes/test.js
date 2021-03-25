@@ -217,17 +217,10 @@ router.post('/', verifyAccessToken, verifyTeacher, asyncHandler(async (req, res)
       if (correct_answers != 1) {
         throw createError(400, 'There must be one correct answer in every question!');
       }
-    } else if (question.type === ESSAY) count_essay++;
+    } else if (question.type === ESSAY) { 
+      count_essay++;
+    }
 
-    // let correct_answers = 0;
-    // question.answers.forEach(answer => {
-    //   if (answer.correct) {
-    //     correct_answers++;
-    //   }
-    // })
-    // if (correct_answers != 1) {
-    //   throw createError(400, 'There must be one correct answer in every question!');
-    // }
   })
 
   if (count_multiple_choice && count_essay) {

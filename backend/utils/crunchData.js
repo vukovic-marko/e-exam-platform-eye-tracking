@@ -30,8 +30,12 @@ const crunchData = (limits, data) => {
     })
 
     const full = arr1.reduce((last, current) => last + current.count, 0)
+    let counter = 0;
     arr1.forEach(e => {
         e.percentage = e.count/full;
+        e.start = counter;
+        e.end = counter + e.count;
+        counter += e.count;
     })
     
     
