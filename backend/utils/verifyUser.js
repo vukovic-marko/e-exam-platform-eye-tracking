@@ -1,36 +1,39 @@
+const asyncHandler = require('express-async-handler')
+const createError = require('http-errors')
+
 const Teacher = require('../model/Teacher')
 const Student = require('../model/Student')
 const User = require('../model/User')
 
-const verifyTeacher = async (req, res, next) => {
+const verifyTeacher = asyncHandler(async (req, res, next) => {
     const teacher = await Teacher.findById(req.user._id);
 
-    if (!teacher) return res.status(401).send('Unauthorized');
+    if (!teacher) throw createError(403, 'Only for teachers');
 
     req.teacher = teacher;
 
     next();
-}
+})
 
-const verifyStudent = async (req, res, next) => {
+const verifyStudent = asyncHandler(async (req, res, next) => {
     const student = await Student.findById(req.user._id);
 
-    if (!student) return res.status(401).send('Unauthorized');
+    if (!student) throw createError(403, 'Only for students');
 
     req.student = student;
 
     next();
-}
+})
 
-const verifyUser = async (req, res, next) => {
+const verifyUser = asyncHandler(async (req, res, next) => {
     const user = await User.findById(req.user._id);
 
-    if (!user) return res.status(401).send('Unauthorised');
+    if (!user) throw createError(403, 'Only for registered users');
 
     req.user = user;
 
     next();
-}
+})
 
 module.exports.verifyTeacher = verifyTeacher;
 module.exports.verifyStudent = verifyStudent;

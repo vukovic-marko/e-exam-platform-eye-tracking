@@ -1,6 +1,8 @@
 const router = require('express').Router();
 const bcrypt = require('bcrypt')
 const { v4 } = require('uuid')
+const asyncHandler = require('express-async-handler')
+const createError = require('http-errors')
 
 const User = require('../model/User')
 const Student = require('../model/Student')
@@ -11,37 +13,34 @@ const { verifyRefreshToken } = require('../utils/verifyToken')
 const { validateLogin, validateRegistration } = require('../validation/authentication')
 
 // REGISTER STUDENT
-router.post('/register', async (req, res) => {
+router.post('/register', asyncHandler(async (req, res) => {
 
   const { error } = validateRegistration(req.body);
-  if (error) return res.status(400).send({ msg: error.details });
+  if (error) throw createError(400, error.details);
 
   const usernameExists = await User.findOne({username: req.body.username});
-  if (usernameExists) return res.status(400).send('Username already taken.')
+  if (usernameExists) throw createError(400, 'Username already taken.')
 
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
-  try { 
-    const user = new Student({username: req.body.username, password: hashedPassword});
-    await user.save();
-    res.status(200).send({user: user._id})
-  } catch(err) {
-    res.status(400).send({msg: err})
-  }
-})
+  const user = new Student({username: req.body.username, password: hashedPassword});
+  await user.save();
+  res.status(200).send({user: user._id});
+
+}))
 
 // LOGIN
-router.post('/login', async (req, res) => {
+router.post('/login', asyncHandler(async (req, res) => {
 
   const { error } = validateLogin(req.body);
-  if (error) return res.status(400).send({ msg: error.details });
+  if (error) throw createError(400, error.details);
 
   const user = await User.findOne({username: req.body.username});
-  if (!user) return res.status(400).send('Username and/or password error.');
+  if (!user) throw createError(401, 'Username and/or password error.');
 
   const validPassword = await bcrypt.compare(req.body.password, user.password);
-  if (!validPassword) return res.status(400).send('Username and/or password error.');
+  if (!validPassword) throw createError(401, 'Username and/or password error.');
 
   const sessionId = v4();
   
@@ -55,14 +54,13 @@ router.post('/login', async (req, res) => {
 
   res.cookie('re-to', refreshToken, {expires: date, httpOnly: true, path: "/user", domain: "localhost"});
   res.status(200).send({accessToken: accessToken});
-})
+}))
 
 // REFRESH ACCESS TOKEN
-router.post('/refresh', verifyRefreshToken, async (req, res) => {
+router.post('/refresh', verifyRefreshToken, asyncHandler(async (req, res) => {
   
   const user = await User.findById(req.user._id);
-  if (!user) return res.status(400).send({ msg: 'Request not valid.' });
-  
+  if (!user) throw createError(400, 'Request not valid.');
   // if (user.sessionId !== req.user.sessionId) return res.status(401).send({ msg: 'Request not valid.' })
 
   const refreshedAccessToken = createAccessToken(user._id, user.role);
@@ -73,15 +71,15 @@ router.post('/refresh', verifyRefreshToken, async (req, res) => {
 
   res.cookie('re-to', refreshedRefreshToken, {expires: date, httpOnly: true, path: "/user", domain: "localhost"});
   res.status(200).send({accessToken: refreshedAccessToken});
-})
+}))
 
 // LOGOUT
-router.post('/logout', verifyRefreshToken, async (req,res) => {
+router.post('/logout', verifyRefreshToken, asyncHandler(async (req,res) => {
   
   await User.findByIdAndUpdate(req.user._id, {$unset: {sessionId: 1}}, {returnOriginal: true, useFindAndModify: false});
 
   res.clearCookie('re-to', {expires: new Date(), httpOnly: true, path: "/user", domain: "localhost"})
   res.send()
-})
+}))
 
 module.exports = router

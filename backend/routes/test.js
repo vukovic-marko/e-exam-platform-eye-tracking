@@ -1,4 +1,6 @@
 const router = require('express').Router();
+const asyncHandler = require('express-async-handler')
+const createError = require('http-errors')
 
 const Test = require('../model/Test');
 const SubmittedTest = require('../model/SubmittedTest')
@@ -34,214 +36,198 @@ const { validateCreateTest, validateGetTests, validateSubmitAnswers } = require(
 //
 // TODO SAKRITI STUDENTIMA TESTOVE KOJE SU ZAVRSILI?
 //
-router.get('/', verifyAccessToken, verifyUser, async (req, res) => {
+router.get('/', verifyAccessToken, verifyUser, asyncHandler(async (req, res) => {
   const { error } = validateGetTests(req.query);
-  if (error) return res.status(400).send({msg: error.details });
+  if (error) throw createError(400, error.details);
   
-  try {
+  let query = {}
+  if (req.user.role === 'teacher') {
+    query["teacher._id"] = req.user._id;
+  } 
 
-    let query = {}
-    if (req.user.role === 'teacher') {
-      query["teacher._id"] = req.user._id;
-    } 
+  Test.paginate(query, { page: req.query.page, limit: req.query.limit }).then(result => {
+    if (result.totalPages < result.page) {
+      throw createError(400, 'Page does not exist.')
+    }
 
-    Test.paginate(query, { page: req.query.page, limit: req.query.limit }).then(result => {
-      if (result.totalPages < result.page) {
-        return res.status(404).send('Page does not exist.')
-      }
-
-      result.docs.forEach(test => {
-        test.questions = undefined;
-      })
-
-      res.status(200).send(result);
+    result.docs.forEach(test => {
+      test.questions = undefined;
     })
-  } catch(err) {
-    res.status(400).send(err);
-  }
-})
+
+    res.status(200).send(result);
+  })
+
+}))
 
 // --------------------------------------------------------------------------------------------
 // GET  /test/id
 // --------------------------------------------------------------------------------------------
 // STUDENTS GET QUESTIONS AND TEST DETAILS AND START TIME AND DATE GETS LOGGED
 // TEACHERS GET STUDENTS WHO TOOK TEST WITH THE PROVIDED ID
-router.get('/:id', verifyAccessToken, verifyUser, async (req, res) => {
+router.get('/:id', verifyAccessToken, verifyUser, asyncHandler(async (req, res) => {
 
-  if (!req.params.id) return res.status(400).send({ msg: "Test id is missing." });
+  if (!req.params.id) throw createError(400, "Test id is missing.");
 
   if (req.user.role === 'student') {
-    try {
-      const test = await Test.findById(req.params.id.toString());
-      
-      let submittedTest = await SubmittedTest.findOne({ "student._id" : req.user.id, "test._id" : test._id });
-      
-      if (!submittedTest) {
-        submittedTest = new SubmittedTest({
-          student: {
-            _id: req.user._id,
-            username: req.user.username
-          },
-          test: test,
-          started_at: new Date()
-        }); 
-  
-        await submittedTest.save();
-      }
-  
-      test.questions.forEach(question => {
-        question.answers.forEach(answer => {
-          answer.correct = undefined;
-        })
-        question.areas_of_interest = undefined;
-      })
-      
-      res.status(200).send(test);
-    } catch(err) {
-      res.status(400).send({ msg: err });
+    const test = await Test.findById(req.params.id.toString());
+    
+    let submittedTest = await SubmittedTest.findOne({ "student._id" : req.user.id, "test._id" : test._id });
+    
+    if (!submittedTest) {
+      submittedTest = new SubmittedTest({
+        student: {
+          _id: req.user._id,
+          username: req.user.username
+        },
+        test: test,
+        started_at: new Date()
+      }); 
+
+      await submittedTest.save();
     }
+
+    test.questions.forEach(question => {
+      question.answers.forEach(answer => {
+        answer.correct = undefined;
+      })
+      question.areas_of_interest = undefined;
+    })
+    
+    res.status(200).send(test);
+
   } else if (req.user.role === 'teacher') {
     // TODO TREBALO BI DA IDE PROVERA DA SE VRATI ERROR AKO TEACHER POKUSA DA PRISTUPI PODACIMA DRUGOG TEACHERA
     // TRENUTNO SE VRACA PRAZNA LISTA ZA TAKVE UPITE
     const { error } = validateGetTests(req.query);
-    if (error) return res.status(400).send({msg: error.details });
+    if (error) throw createError(400, error.details);
     
     const testId = req.params.id.toString();
     
-    try {
-      SubmittedTest.paginate({ "test.teacher._id" : req.user._id, "test._id" : testId }, { page: req.query.page, limit: req.query.limit}).then(result => {
-        
-        result.docs.forEach(submittedTest => {
-          submittedTest.test.questions = undefined;
-          submittedTest.submitted_answers = undefined;
-        })
+    SubmittedTest.paginate(
+      { "test.teacher._id" : req.user._id, "test._id" : testId }, 
+      { page: req.query.page, limit: req.query.limit}
+    ).then(result => {
       
-        return res.status(200).send(result);
-      });
-    } catch(err) {
-      res.status(400).send(err);
-    }
+      result.docs.forEach(submittedTest => {
+        submittedTest.test.questions = undefined;
+        submittedTest.submitted_answers = undefined;
+      })
+    
+      return res.status(200).send(result);
+    });
+
   } 
-})
+}))
 
 // --------------------------------------------------------------------------------------------
 // POST  /test/id   (STUDENTS ONLY)
 // --------------------------------------------------------------------------------------------
 // SUBMITS STUDENT'S ANSWERS AND EYE MOVEMENT DATA
-router.post('/:id', verifyAccessToken, verifyStudent, async (req, res) => {
+router.post('/:id', verifyAccessToken, verifyStudent, asyncHandler(async (req, res) => {
   
   const { error } = validateSubmitAnswers(req.body);
-  if (error) return res.status(400).send({ msg: error.details });
+  if (error) throw createError(400, error.details);
 
-  try {
-    let submittedTest = await SubmittedTest.findOne({ "student._id" : req.student._id, "test._id" : req.params.id.toString() });
-    if (!submittedTest) return res.status(400).send('Cannot submit answers without opening it first.');
-    if (submittedTest.submitted_at) return res.status(400).send('Answers already submitted.');
+  let submittedTest = await SubmittedTest.findOne({ "student._id" : req.student._id, "test._id" : req.params.id.toString() });
+  if (!submittedTest) throw createError(400, 'Cannot submit answers without opening it first.');
+  if (submittedTest.submitted_at) throw createError(400, 'Answers already submitted.');
 
-    if (submittedTest.test.questions.length !== req.body.answers.length) return res.status(400).send('Number of answers does not match with the number of questions.');
-
-    let points = 0;
-
-    submittedTest.test.questions.forEach((question, idx) => {
-      const correct_answer = question.answers.find(answer => answer.correct === true);
-      
-      if (question._id.toString() !== req.body.answers[idx].question_id.toString())
-        throw 'Question and submitted answer id mismatch.';
-
-      if (correct_answer._id.toString() === req.body.answers[idx].answer_id.toString()) {
-        // CORRECT ANSWER
-        points += question.points;
-        req.body.answers[idx].correct = true;
-      } else {
-        // INCORRECT ANSWER
-        req.body.answers[idx].correct = false;
-      }
-    })
-
-    submittedTest.submitted_answers = req.body.answers;
-    submittedTest.points = points;
-    submittedTest.submitted_at = new Date();
-
-    submittedTest.test.questions.forEach((e,i) => {
-      const { sequence, sequence_length, summary } = crunchData(e.areas_of_interest, submittedTest.submitted_answers[i].gaze_data);
-
-      submittedTest.submitted_answers[i].crunched_gaze_data = {
-        sequence: sequence,
-        sequence_length: sequence_length,
-        summary: summary
-      }
-
-    })
-
-    await submittedTest.save();
-    
-    submittedTest.test.questions = undefined;
-    submittedTest.submitted_answers.forEach(item => {
-      item.answer_id = undefined;
-      item.answer = undefined;
-      item.gaze_data = undefined;
-    });
-
-    res.status(200).send(submittedTest);
-
-  } catch(err) {
-    res.status(400).send({ msg: err });
+  if (submittedTest.test.questions.length !== req.body.answers.length) {
+    throw createError(400, 'Number of answers does not match with the number of questions.');
   }
-})
+
+  let points = 0;
+
+  submittedTest.test.questions.forEach((question, idx) => {
+    const correct_answer = question.answers.find(answer => answer.correct === true);
+    
+    if (question._id.toString() !== req.body.answers[idx].question_id.toString())
+      throw createError(400, 'Question and submitted answer id mismatch.');
+
+    if (correct_answer._id.toString() === req.body.answers[idx].answer_id.toString()) {
+      // CORRECT ANSWER
+      points += question.points;
+      req.body.answers[idx].correct = true;
+    } else {
+      // INCORRECT ANSWER
+      req.body.answers[idx].correct = false;
+    }
+  })
+
+  submittedTest.submitted_answers = req.body.answers;
+  submittedTest.points = points;
+  submittedTest.submitted_at = new Date();
+
+  submittedTest.test.questions.forEach((e,i) => {
+    const { sequence, sequence_length, summary } = crunchData(e.areas_of_interest, submittedTest.submitted_answers[i].gaze_data);
+
+    submittedTest.submitted_answers[i].crunched_gaze_data = {
+      sequence: sequence,
+      sequence_length: sequence_length,
+      summary: summary
+    }
+
+  })
+
+  await submittedTest.save();
+  
+  submittedTest.test.questions = undefined;
+  submittedTest.submitted_answers.forEach(item => {
+    item.answer_id = undefined;
+    item.answer = undefined;
+    item.gaze_data = undefined;
+    item.crunched_gaze_data = undefined;
+  });
+
+  res.status(200).send(submittedTest);
+}))
 
 // --------------------------------------------------------------------------------------------
 // POST  /test    (TEACHERS ONLY)
 // --------------------------------------------------------------------------------------------
 // CREATES TEST
-router.post('/', verifyAccessToken, verifyTeacher, async (req, res) => {
+router.post('/', verifyAccessToken, verifyTeacher, asyncHandler(async (req, res) => {
 
   const { error } = validateCreateTest(req.body);
-  if (error) return res.status(400).send({ msg: error.details });
+  if (error) throw createError(400, error.details);
 
-  try {
-    req.body.questions.forEach(question => {
-      let correct_answers = 0;
-      question.answers.forEach(answer => {
-        if (answer.correct) {
-          correct_answers++;
-        }
-      })
-      if (correct_answers != 1) {
-        throw 'There must be one correct answer in every question!';
+  req.body.questions.forEach(question => {
+    let correct_answers = 0;
+    question.answers.forEach(answer => {
+      if (answer.correct) {
+        correct_answers++;
       }
     })
+    if (correct_answers != 1) {
+      throw createError(400, 'There must be one correct answer in every question!');
+    }
+  })
 
-    const test = new Test(req.body)
+  const test = new Test(req.body)
 
-    test.test_points = test.questions.reduce((temp, current) => temp + current.points, 0);
-    test.teacher = (({_id, username}) => ({_id, username}))(req.teacher);
+  test.test_points = test.questions.reduce((temp, current) => temp + current.points, 0);
+  test.teacher = (({_id, username}) => ({_id, username}))(req.teacher);
 
-    await test.save();
-    return res.status(200).send(test);
-  } catch (err) {    
-    return res.status(400).send(err);
-  }
-})
+  await test.save();
+  res.status(200).send(test);
+}))
 
 // --------------------------------------------------------------------------------------------
 // POST  /result/id    (TEACHERS ONLY)
 // --------------------------------------------------------------------------------------------
 // TEACHERS CAN SEE ANSWERS AND EYE MOVEMENT DATA FOR A SINGLE STUDENT FOR A SINGLE TEST
-router.get('/result/:id', verifyAccessToken, verifyTeacher, async (req, res) => {
+router.get('/result/:id', verifyAccessToken, verifyTeacher, asyncHandler(async (req, res) => {
   // TODO TREBALO BI DA IDE PROVERA DA SE VRATI ERROR AKO TEACHER POKUSA DA PRISTUPI PODACIMA DRUGOG TEACHERA
   // TRENUTNO SE VRACA PRAZNA LISTA ZA TAKVE UPITE
-  if (!req.params.id) return res.status(400).send({ msg: "Test id is missing." });
+  if (!req.params.id) throw createError(400, "Test id is missing.");
 
   const submittedTestId = req.params.id;
 
-  try {
-    const submittedTest = await SubmittedTest.findOne({ "test.teacher._id" : req.teacher._id, "_id" : submittedTestId });
-    
-    return res.status(200).send(submittedTest);
-  } catch(err) {
-    res.status(400).send(err);
-  }
-})
+  const submittedTest = await SubmittedTest.findOne({ "test.teacher._id" : req.teacher._id, "_id" : submittedTestId });
+  if (!submittedTest) throw createError(404, "Doesn't exist.")
+
+  res.status(200).send(submittedTest);
+}))
 
 
 

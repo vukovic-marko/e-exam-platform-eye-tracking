@@ -1,8 +1,9 @@
 require('dotenv').config() // load environment variables from .env file 
 
 const express = require('express'); // express for rest
-const mongoose = require('mongoose')
-const cookie = require('cookie-parser')
+const mongoose = require('mongoose');
+const cookie = require('cookie-parser');
+const createError = require('http-errors');
 
 const app = express();
 
@@ -32,6 +33,16 @@ app.use('/user', user)
 
 // ROUTE /test REQUESTS TO test
 app.use('/test', test)
+
+// CATCH 404 ERRORS AND FORWARD THEM TO ERROR HANDLER
+app.use((req, res, next) => {
+  next(createError(404))
+})
+
+// ERROR HANDLER
+app.use((error, req, res, next) => {
+  res.status(error.status || 500).send(error);
+})
 
 // LISTEN ON SPECIFIED PORT
 app.listen(port, () => {
