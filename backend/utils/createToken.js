@@ -3,8 +3,8 @@ const jwt = require('jsonwebtoken')
 // TO GENERATE SECRET
 //  node -e "console.log(require('crypto').randomBytes(256).toString('base64'));"
 
-const createAccessToken = (id, role) => {
-    return jwt.sign({_id: id, role: role}, process.env.ACCESS_TOKEN_SECRET || "SECRET", {expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || '15m'});
+const createAccessToken = (id, username, role) => {
+    return jwt.sign({_id: id, username: username, role: role}, process.env.ACCESS_TOKEN_SECRET || "SECRET", {expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || '15m'});
 }
 
 const createRefreshToken = (id, sessionId) => {

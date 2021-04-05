@@ -44,7 +44,7 @@ router.post('/login', asyncHandler(async (req, res) => {
 
   const sessionId = v4();
   
-  const accessToken = createAccessToken(user._id, user.role);
+  const accessToken = createAccessToken(user._id, user.username, user.role);
   const refreshToken = createRefreshToken(user._id, sessionId);
   
   await User.findByIdAndUpdate(req.body._id, {sessionId: sessionId}, {returnOriginal: true, useFindAndModify: false});
@@ -52,7 +52,7 @@ router.post('/login', asyncHandler(async (req, res) => {
   let date = new Date();
   date.setDate(date.getDate() + 1);
 
-  res.cookie('re-to', refreshToken, {expires: date, httpOnly: true, path: "/user", domain: "localhost"});
+  res.cookie('re-to', refreshToken, {expires: date, httpOnly: true });
   res.status(200).send({accessToken: accessToken});
 }))
 
@@ -63,13 +63,13 @@ router.post('/refresh', verifyRefreshToken, asyncHandler(async (req, res) => {
   if (!user) throw createError(400, 'Request not valid.');
   // if (user.sessionId !== req.user.sessionId) return res.status(401).send({ msg: 'Request not valid.' })
 
-  const refreshedAccessToken = createAccessToken(user._id, user.role);
+  const refreshedAccessToken = createAccessToken(user._id, user.username, user.role);
   const refreshedRefreshToken = createRefreshToken(user._id, user.sessionId);
 
   let date = new Date();
   date.setDate(date.getDate() + 1);
 
-  res.cookie('re-to', refreshedRefreshToken, {expires: date, httpOnly: true, path: "/user", domain: "localhost"});
+  res.cookie('re-to', refreshedRefreshToken, {expires: date, httpOnly: true});
   res.status(200).send({accessToken: refreshedAccessToken});
 }))
 
@@ -78,8 +78,8 @@ router.post('/logout', verifyRefreshToken, asyncHandler(async (req,res) => {
   
   await User.findByIdAndUpdate(req.user._id, {$unset: {sessionId: 1}}, {returnOriginal: true, useFindAndModify: false});
 
-  res.clearCookie('re-to', {expires: new Date(), httpOnly: true, path: "/user", domain: "localhost"})
-  res.send()
+  res.clearCookie('re-to', {expires: new Date(), httpOnly: true})
+  res.send('success')
 }))
 
 module.exports = router

@@ -20,6 +20,7 @@ const verifyAccessToken = (req, res, next) => {
 
 // TODO ADD BEARER
 const verifyRefreshToken = (req, res, next) => {
+
     const token = req.cookies['re-to'];
     if (!token) throw createError(400, 'Access Denied');
 
