@@ -20,9 +20,7 @@ function App() {
   const history = useHistory();
 
   useEffect(() => {
-    console.log('app state changed');
     if (history.location.pathname === '/') {
-      console.log('attempting to refresh token'); 
       axios.post('http://localhost:5000/user/refresh', null, { withCredentials: true })
           .then((resp) => {
             setLoading(false);
@@ -44,8 +42,8 @@ function App() {
             {loading 
               ? <p>loading</p>
               : user.role === 'teacher'
-                ? <Teacher user={user} setToken={setToken} />
-                : <Student user={user} setToken={setToken} /> 
+                ? <Teacher user={user} token={token} setToken={setToken} />
+                : <Student user={user} token={token} setToken={setToken} /> 
             }
           </React.Fragment>
         </Route>
