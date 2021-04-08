@@ -13,8 +13,9 @@ const Student = (props) => {
 
     useEffect(() => {
 
-        const refreshPromise = (resolve, reject) => {
-            axios.post('http://localhost:5000/user/refresh', null, { withCredentials: true })
+        const refreshToken = () => {
+            return new Promise((resolve, reject) => {
+                axios.post('http://localhost:5000/user/refresh', null, { withCredentials: true })
                  .then((resp) => {
                     setToken(resp.data.accessToken);
                     resolve(resp.data.accessToken);
@@ -22,14 +23,15 @@ const Student = (props) => {
                  .catch((err) => {
                     reject(err);
                  });
+            })
         }
 
-        new Promise(refreshPromise)
+        refreshToken()
             .then(token => loadTests(token, 1))
             .catch(err => history.push('/login'))
 
         const interval = setInterval(() => {
-            new Promise(refreshPromise)
+            refreshToken()
                 .catch(err => history.push('/login'))
 
         }, 5000);
@@ -50,10 +52,14 @@ const Student = (props) => {
              })
     }
 
+    const openTest = (id) => {
+        alert(`student opened a test with id = ${id}`)
+    }
+
     return (
         <React.Fragment>
             <NavigationBar username={props.user.username} logout={props.logout} />
-            <TestDeck docs={docs} loadTests={loadTests} token={token} />
+            <TestDeck docs={docs} loadTests={loadTests} token={token} caption="Take Test" callback={openTest} />
         </React.Fragment>
     )
 }

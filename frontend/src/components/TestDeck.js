@@ -28,7 +28,7 @@ const TestDeck = (props) => {
                         <Card.Text className="pl-2">
                             Type: {e.type} <br />
                             Max points: {e.test_points} <br />
-                            <Button variant="primary">Take Test</Button>
+                            <Button variant="primary" onClick={() => props.callback(e._id)}>{props.caption}</Button>
                         </Card.Text>
                         <Card.Footer>
                             <small className="text-muted">Teacher: {e.teacher.username}</small>

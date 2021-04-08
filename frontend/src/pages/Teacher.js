@@ -3,18 +3,23 @@ import { useHistory } from 'react-router-dom'
 import axios from 'axios';
 import NavigationBar from '../components/NavigationBar';
 import TestDeck from '../components/TestDeck';
+import Button from 'react-bootstrap/Button';
+import StudentTable from '../components/StudentTable';
 
 const Teacher = (props) => {
 
     const [docs, setDocs] = useState({});
+    const [students, setStudents] = useState();
+    const [selectedTest, setSelectedTest] = useState(null);
 
     const history = useHistory();
     const { token, setToken } = props;
 
     useEffect(() => {
 
-        const refreshPromise = (resolve, reject) => {
-            axios.post('http://localhost:5000/user/refresh', null, { withCredentials: true })
+        const refreshToken = () => {
+            return new Promise((resolve, reject) => {
+                axios.post('http://localhost:5000/user/refresh', null, { withCredentials: true })
                  .then((resp) => {
                     setToken(resp.data.accessToken);
                     resolve(resp.data.accessToken);
@@ -22,14 +27,15 @@ const Teacher = (props) => {
                  .catch((err) => {
                     reject(err);
                  });
+            })
         }
 
-        new Promise(refreshPromise)
+        refreshToken()
             .then(token => loadTests(token, 1))
             .catch(err => history.push('/login'))
 
         const interval = setInterval(() => {
-            new Promise(refreshPromise)
+            refreshToken()
                 .catch(err => history.push('/login'))
 
         }, 5000);
@@ -50,10 +56,36 @@ const Teacher = (props) => {
              })
     }
 
+    const viewStudentsPromise = (id) => {
+        return new Promise((resolve, reject) => {
+            axios.get(`http://localhost:5000/test/${id}?page=1&limit=15`, {headers: {Authorization: `Bearer ${token}`}})
+                 .then(resp => {
+                     resolve(resp);
+                 })
+                 .catch(err => {
+                     reject(err);
+                 })
+        })
+    }
+
+    const viewStudents = (id) => {
+        setSelectedTest(id);
+        viewStudentsPromise(id)
+            .then((resp) => {
+                setStudents(resp.data.docs);
+            })
+    }
+
     return (
         <React.Fragment>
             <NavigationBar username={props.user.username} logout={props.logout} />
-            <TestDeck docs={docs} loadTests={loadTests} token={token} />
+            {!selectedTest 
+                ? <TestDeck docs={docs} loadTests={loadTests} token={token} caption="View Students" callback={viewStudents} />
+                : <div>
+                    {/* <p>{students}</p> */}
+                    <StudentTable tests={students} />
+                    <Button onClick={() => {setSelectedTest(null); setStudents(null)}}>x</Button>
+                  </div>}
         </React.Fragment>
     )
 }

@@ -33,10 +33,10 @@ const Register = (props) => {
       
       }
 
-    return (
-        <React.Fragment>
-            <Container>
-              <Form onChange={handleChange} onSubmit={handleSubmit}>
+      return (
+        <div> 
+            <Container style={{height: window.innerHeight, width: window.innerWidth}} className="d-flex justify-content-center align-items-center">
+              <Form onChange={handleChange} onSubmit={handleSubmit} style={{width: 500}}>
                 <Form.Group controlId="formBasicEmail">
                   <Form.Label>Username</Form.Label>
                   <Form.Control name="username" type="string" placeholder="Enter username" />
@@ -49,9 +49,12 @@ const Register = (props) => {
                 <Button variant="primary" type="submit">
                   Login
                 </Button>
+                <Button variant="link" onClick={() => history.push('/register')}>
+                  Don't have an account?
+                </Button>
               </Form>
             </Container>
-          </React.Fragment>
+          </div>
     )
 }
 
