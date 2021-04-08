@@ -9,41 +9,38 @@ import Pagination from 'react-bootstrap/Pagination';
 import NavigationBar from '../components/NavigationBar';
 
 const Student = (props) => {
-
+    
     const [docs, setDocs] = useState({});
 
     const { token, setToken } = props;
     const history = useHistory();
 
-
     useEffect(() => {
-        const interval = setInterval(() => {
+
+        const refreshPromise = (resolve, reject) => {
             axios.post('http://localhost:5000/user/refresh', null, { withCredentials: true })
                  .then((resp) => {
                     setToken(resp.data.accessToken);
+                    resolve(resp.data.accessToken);
                  })
                  .catch((err) => {
-                    console.log('redirecting to login');
-                    history.push('/login');
-                 })
+                    reject(err);
+                 });
+        }
+
+        new Promise(refreshPromise)
+            .then(token => loadTests(token, 1))
+            .catch(err => history.push('/login'))
+
+        const interval = setInterval(() => {
+            new Promise(refreshPromise)
+                .catch(err => history.push('/login'))
+
         }, 5000);
+
         return () => { 
             clearInterval(interval);
         }
-      }, [history, setToken]);
-
-    useEffect(() => {
-        console.log('getting tests')
-
-        axios.post('http://localhost:5000/user/refresh', null, { withCredentials: true })
-                 .then((resp) => {
-                    setToken(resp.data.accessToken);
-                    loadTests(resp.data.accessToken, 1);
-                 })
-                 .catch((err) => {
-                    console.log('redirecting to login');
-                    history.push('/login');
-                 })
 
     }, [history, setToken]);
 
@@ -94,4 +91,4 @@ const Student = (props) => {
     )
 }
 
-export default Student
+export default Student;
