@@ -5,6 +5,8 @@ import { Route, Switch, useHistory } from 'react-router-dom';
 import axios from 'axios';
 import { decodeToken } from 'react-jwt';
 
+import Spinner from 'react-bootstrap/Spinner';
+
 import NotFound from './pages/NotFound';
 import Register from './pages/Register';
 import Login from './pages/Login';
@@ -34,16 +36,31 @@ function App() {
     }
   }, [history]);
 
+  const handleLogout = () => {
+    axios.post('http://localhost:5000/user/logout', null, { withCredentials: true })
+         .then((resp) => {
+          setToken(null);
+          history.push('/login');
+         })
+         .catch((err) => {
+           console.log('err', err);
+         })
+  }
+
   return (
     <React.Fragment>
       <Switch>
         <Route exact path="/">
           <React.Fragment>
             {loading 
-              ? <p>loading</p>
+              ? <div style={{display: 'flex', height: window.innerHeight, justifyContent: 'center', alignItems: 'center'}}>
+                  <Spinner animation="border" role="status">
+                    <span className="sr-only">Loading...</span>
+                  </Spinner>
+                </div>
               : user.role === 'teacher'
-                ? <Teacher user={user} token={token} setToken={setToken} />
-                : <Student user={user} token={token} setToken={setToken} /> 
+                ? <Teacher user={user} token={token} setToken={setToken} logout={handleLogout} />
+                : <Student user={user} token={token} setToken={setToken} logout={handleLogout} /> 
             }
           </React.Fragment>
         </Route>

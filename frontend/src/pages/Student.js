@@ -5,12 +5,14 @@ import axios from 'axios';
 import Card from 'react-bootstrap/Card';
 import CardDeck from 'react-bootstrap/CardDeck';
 import Container from 'react-bootstrap/Container';
+import Pagination from 'react-bootstrap/Pagination';
+import NavigationBar from '../components/NavigationBar';
 
 const Student = (props) => {
 
-    const [docs, setDocs] = useState([]);
+    const [docs, setDocs] = useState({});
 
-    const { setToken } = props;
+    const { token, setToken } = props;
     const history = useHistory();
 
 
@@ -36,55 +38,57 @@ const Student = (props) => {
         axios.post('http://localhost:5000/user/refresh', null, { withCredentials: true })
                  .then((resp) => {
                     setToken(resp.data.accessToken);
-                    axios.get('http://localhost:5000/test?page=1&limit=15', { headers: { Authorization: `Bearer ${resp.data.accessToken}` }})
-                         .then((resp) => {
-                            setDocs(resp.data.docs);
-                         })
-                         .catch((err) => {
-                            console.log('err', err);
-                         })
+                    loadTests(resp.data.accessToken, 1);
                  })
                  .catch((err) => {
                     console.log('redirecting to login');
                     history.push('/login');
                  })
 
-    }, [history, setToken])
+    }, [history, setToken]);
 
-
-    const handleLogout = () => {
-        axios.post('http://localhost:5000/user/logout', null, { withCredentials: true })
+    const loadTests = (token, page) => {
+        axios.get(`http://localhost:5000/test?page=${page}&limit=9`, { headers: { Authorization: `Bearer ${token}` }})
              .then((resp) => {
-              props.setToken(null);
-              history.push('/login');
+                setDocs(d => ({...d, docs: resp.data.docs, page: resp.data.page, totalPages: resp.data.totalPages}));
              })
              .catch((err) => {
-               console.log('err', err);
+                console.log('err', err);
              })
+    }
+    
+    let items = [];
+
+    for (let number = 1; number <= docs.totalPages; number++) {
+        items.push(
+          <Pagination.Item key={number} active={number === docs.page} onClick={() => loadTests(token, number)}>
+            {number}
+          </Pagination.Item>,
+        );
     }
 
     return (
         <React.Fragment>
+            <NavigationBar username={props.user.username} logout={props.logout} />
             <Container>
-                Student's Page <br />
-                Hi, {props.user.username}! <br />
-                <Button onClick={handleLogout}>Logout</Button>
                 <CardDeck>
-                {docs.map((e,i) => 
-                    <Card key={i}>
-                        <Card.Title>
-                            {e.title}
-                        </Card.Title>
-                        <Card.Text>
-                            Type: {e.type} <br />
-                            Max points: {e.test_points}
-                        </Card.Text>
-                        <Card.Footer>
-                            <small className="text-muted">Teacher: {e.teacher.username}</small>
-                        </Card.Footer>
-                    </Card>
-                )}
+                    {docs && docs.docs && docs.docs.map((e,i) => 
+                        <Card key={i} className="m-3" style={{minWidth: 300}}>
+                            <Card.Title className="p-2">
+                                {e.title}
+                            </Card.Title>
+                            <Card.Text className="pl-2">
+                                Type: {e.type} <br />
+                                Max points: {e.test_points} <br />
+                                <Button variant="primary">Take Test</Button>
+                            </Card.Text>
+                            <Card.Footer>
+                                <small className="text-muted">Teacher: {e.teacher.username}</small>
+                            </Card.Footer>
+                        </Card>
+                    )}
                 </CardDeck>
+                <Pagination className="justify-content-center">{items}</Pagination>
             </Container>
         </React.Fragment>
     )
