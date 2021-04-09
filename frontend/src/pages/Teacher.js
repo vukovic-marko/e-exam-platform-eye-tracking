@@ -11,6 +11,7 @@ const Teacher = (props) => {
     const [docs, setDocs] = useState({});
     const [students, setStudents] = useState();
     const [selectedTest, setSelectedTest] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     const history = useHistory();
     const { token, setToken } = props;
@@ -68,11 +69,12 @@ const Teacher = (props) => {
         })
     }
 
-    const viewStudents = (id) => {
-        setSelectedTest(id);
+    const viewStudents = (id, title, type) => {
+        setSelectedTest({title: title, type: type});
         viewStudentsPromise(id)
             .then((resp) => {
                 setStudents(resp.data.docs);
+                setLoading(false);
             })
     }
 
@@ -82,10 +84,10 @@ const Teacher = (props) => {
             {!selectedTest 
                 ? <TestDeck docs={docs} loadTests={loadTests} token={token} caption="View Students" callback={viewStudents} />
                 : <div>
-                    {/* <p>{students}</p> */}
-                    <StudentTable tests={students} />
-                    <Button onClick={() => {setSelectedTest(null); setStudents(null)}}>x</Button>
-                  </div>}
+                    <Button variant="outline-primary" style={{position: 'absolute', right:0, marginRight: 70, marginTop: 15}} onClick={() => {setSelectedTest(null); setStudents(null); setLoading(true); }}>x</Button>
+                    <StudentTable tests={students} loading={loading} selectedTest={selectedTest} />
+                  </div>
+            }
         </React.Fragment>
     )
 }

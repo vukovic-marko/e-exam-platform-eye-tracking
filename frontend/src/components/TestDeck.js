@@ -20,21 +20,22 @@ const TestDeck = (props) => {
     return (
         <Container>
             <CardDeck>
-                {props.docs && props.docs.docs && props.docs.docs.map((e,i) => 
-                    <Card key={i} className="m-3" style={{minWidth: 300}}>
-                        <Card.Title className="p-2">
-                            {e.title}
-                        </Card.Title>
-                        <Card.Text className="pl-2">
-                            Type: {e.type} <br />
-                            Max points: {e.test_points} <br />
-                            <Button variant="primary" onClick={() => props.callback(e._id)}>{props.caption}</Button>
-                        </Card.Text>
-                        <Card.Footer>
-                            <small className="text-muted">Teacher: {e.teacher.username}</small>
-                        </Card.Footer>
-                    </Card>
-                )}
+                {props.docs && props.docs.docs && props.docs.docs.map((e,i) => {
+                    let type = e.type.charAt(0) + e.type.toLowerCase().replace('_', ' ').slice(1);
+                    return <Card key={i} className="m-3" style={{minWidth: 300, maxWidth: 347}}>
+                            <Card.Title className="p-2">
+                                {e.title}
+                            </Card.Title>
+                            <Card.Text className="pl-2">
+                                Type: {type} <br />
+                                Max points: {e.test_points} <br />
+                                <Button variant="primary" onClick={() => props.callback(e._id, e.title, type)}>{props.caption}</Button>
+                            </Card.Text>
+                            <Card.Footer>
+                                <small className="text-muted">Teacher: {e.teacher.username}</small>
+                            </Card.Footer>
+                        </Card>
+                })}
             </CardDeck>
             <Pagination className="justify-content-center">{items}</Pagination>
         </Container>
