@@ -22,7 +22,6 @@ const useRefreshToken = (setToken) => {
         }
 
         refreshToken()
-            // .then(token => loadTests(token, 1))
             .catch(err => history.push('/login'))
 
         const interval = setInterval(() => {

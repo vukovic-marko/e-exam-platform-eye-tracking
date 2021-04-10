@@ -3,10 +3,12 @@ import axios from 'axios';
 import NavigationBar from '../components/NavigationBar';
 import TestDeck from '../components/TestDeck';
 import useRefreshToken from '../hooks/useRefreshToken';
+import Test from '../components/Test';
 
 const Student = (props) => {
     
     const [docs, setDocs] = useState({});
+    const [selectedTest, setSelectedTest] = useState(null);
 
     useRefreshToken(props.setToken);
 
@@ -25,13 +27,26 @@ const Student = (props) => {
     }
 
     const openTest = (id) => {
-        alert(`student opened a test with id = ${id}`)
+        axios.get(`http://localhost:5000/test/${id}`, {headers: { Authorization: `Bearer ${props.token}` } })
+             .then((resp) => {
+                setSelectedTest(resp.data);
+             })
+             .catch((err) => {
+                console.log('err', err);
+             })
     }
 
     return (
         <React.Fragment>
-            <NavigationBar username={props.user.username} logout={props.logout} />
-            <TestDeck docs={docs} loadTests={loadTests} token={props.token} caption="Take Test" callback={openTest} />
+            {!selectedTest 
+                ? <React.Fragment>
+                    <NavigationBar username={props.user.username} logout={props.logout} />
+                    <TestDeck docs={docs} loadTests={loadTests} token={props.token} caption="Take Test" callback={openTest} />
+                  </React.Fragment>
+                : <React.Fragment>
+                    <Test test={selectedTest} />
+                  </React.Fragment>
+            }
         </React.Fragment>
     )
 }
