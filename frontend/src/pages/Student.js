@@ -1,46 +1,18 @@
 import React, { useEffect, useState } from 'react'
-import { useHistory } from 'react-router-dom'
 import axios from 'axios';
 import NavigationBar from '../components/NavigationBar';
 import TestDeck from '../components/TestDeck';
+import useRefreshToken from '../hooks/useRefreshToken';
 
 const Student = (props) => {
     
     const [docs, setDocs] = useState({});
 
-    const { token, setToken } = props;
-    const history = useHistory();
+    useRefreshToken(props.setToken);
 
     useEffect(() => {
-
-        const refreshToken = () => {
-            return new Promise((resolve, reject) => {
-                axios.post('http://localhost:5000/user/refresh', null, { withCredentials: true })
-                 .then((resp) => {
-                    setToken(resp.data.accessToken);
-                    resolve(resp.data.accessToken);
-                 })
-                 .catch((err) => {
-                    reject(err);
-                 });
-            })
-        }
-
-        refreshToken()
-            .then(token => loadTests(token, 1))
-            .catch(err => history.push('/login'))
-
-        const interval = setInterval(() => {
-            refreshToken()
-                .catch(err => history.push('/login'))
-
-        }, 5000);
-
-        return () => { 
-            clearInterval(interval);
-        }
-
-    }, [history, setToken]);
+        if (!Object.keys(docs).length && props.token !== undefined) loadTests(props.token, 1);
+    }, [props.token, docs]);
 
     const loadTests = (token, page) => {
         axios.get(`http://localhost:5000/test?page=${page}&limit=9`, { headers: { Authorization: `Bearer ${token}` }})
@@ -59,7 +31,7 @@ const Student = (props) => {
     return (
         <React.Fragment>
             <NavigationBar username={props.user.username} logout={props.logout} />
-            <TestDeck docs={docs} loadTests={loadTests} token={token} caption="Take Test" callback={openTest} />
+            <TestDeck docs={docs} loadTests={loadTests} token={props.token} caption="Take Test" callback={openTest} />
         </React.Fragment>
     )
 }

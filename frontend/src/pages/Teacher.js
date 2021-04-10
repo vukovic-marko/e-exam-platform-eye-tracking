@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { useHistory } from 'react-router-dom'
 import axios from 'axios';
 import NavigationBar from '../components/NavigationBar';
 import TestDeck from '../components/TestDeck';
 import Button from 'react-bootstrap/Button';
 import StudentTable from '../components/StudentTable';
+import useRefreshToken from '../hooks/useRefreshToken';
 
 const Teacher = (props) => {
 
@@ -13,39 +13,11 @@ const Teacher = (props) => {
     const [selectedTest, setSelectedTest] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const history = useHistory();
-    const { token, setToken } = props;
+    useRefreshToken(props.setToken);
 
     useEffect(() => {
-
-        const refreshToken = () => {
-            return new Promise((resolve, reject) => {
-                axios.post('http://localhost:5000/user/refresh', null, { withCredentials: true })
-                 .then((resp) => {
-                    setToken(resp.data.accessToken);
-                    resolve(resp.data.accessToken);
-                 })
-                 .catch((err) => {
-                    reject(err);
-                 });
-            })
-        }
-
-        refreshToken()
-            .then(token => loadTests(token, 1))
-            .catch(err => history.push('/login'))
-
-        const interval = setInterval(() => {
-            refreshToken()
-                .catch(err => history.push('/login'))
-
-        }, 5000);
-
-        return () => { 
-            clearInterval(interval);
-        }
-
-    }, [history, setToken]);
+        if (!Object.keys(docs).length && props.token !== undefined) loadTests(props.token, 1);
+    }, [props.token, docs]);
 
     const loadTests = (token, page) => {
         axios.get(`http://localhost:5000/test?page=${page}&limit=9`, { headers: { Authorization: `Bearer ${token}` }})
@@ -59,7 +31,7 @@ const Teacher = (props) => {
 
     const viewStudentsPromise = (id) => {
         return new Promise((resolve, reject) => {
-            axios.get(`http://localhost:5000/test/${id}?page=1&limit=15`, {headers: {Authorization: `Bearer ${token}`}})
+            axios.get(`http://localhost:5000/test/${id}?page=1&limit=15`, {headers: {Authorization: `Bearer ${props.token}`}})
                  .then(resp => {
                      resolve(resp);
                  })
@@ -82,7 +54,7 @@ const Teacher = (props) => {
         <React.Fragment>
             <NavigationBar username={props.user.username} logout={props.logout} />
             {!selectedTest 
-                ? <TestDeck docs={docs} loadTests={loadTests} token={token} caption="View Students" callback={viewStudents} />
+                ? <TestDeck docs={docs} loadTests={loadTests} token={props.token} caption="View Students" callback={viewStudents} />
                 : <div>
                     <Button variant="outline-primary" style={{position: 'absolute', right:0, marginRight: 70, marginTop: 15}} onClick={() => {setSelectedTest(null); setStudents(null); setLoading(true); }}>x</Button>
                     <StudentTable tests={students} loading={loading} selectedTest={selectedTest} />
