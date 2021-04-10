@@ -41,10 +41,11 @@ const Student = (props) => {
             {!selectedTest 
                 ? <React.Fragment>
                     <NavigationBar username={props.user.username} logout={props.logout} />
+                    <h1 style={{textAlign: 'center', marginTop: 20}}>Available Tests</h1>
                     <TestDeck docs={docs} loadTests={loadTests} token={props.token} caption="Take Test" callback={openTest} />
                   </React.Fragment>
                 : <React.Fragment>
-                    <Test test={selectedTest} />
+                    <Test test={selectedTest} setSelectedTest={setSelectedTest} />
                   </React.Fragment>
             }
         </React.Fragment>

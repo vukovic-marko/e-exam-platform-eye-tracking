@@ -28,10 +28,10 @@ const StudentTable = (props) => {
                                         {props.tests.map((item,idx) => 
                                             <tr key={idx}>
                                                 <td>
-                                                    {dayjs(item.started_at).format('DD/MM/YYYY HH:mm')}
+                                                    {item.started_at ? dayjs(item.started_at).format('DD/MM/YYYY HH:mm') : '-'}
                                                 </td>
                                                 <td>
-                                                    {dayjs(item.submitted_at).format('DD/MM/YYYY HH:mm')}
+                                                    {item.submitted_at ? dayjs(item.submitted_at).format('DD/MM/YYYY HH:mm') : '-'}
                                                 </td>
                                                 <td>
                                                     {item.student.username}

@@ -54,7 +54,10 @@ const Teacher = (props) => {
         <React.Fragment>
             <NavigationBar username={props.user.username} logout={props.logout} />
             {!selectedTest 
-                ? <TestDeck docs={docs} loadTests={loadTests} token={props.token} caption="View Students" callback={viewStudents} />
+                ? <React.Fragment>
+                    <h1 style={{textAlign: 'center', marginTop: 20}}>Created Tests</h1>
+                    <TestDeck docs={docs} loadTests={loadTests} token={props.token} caption="View Students" callback={viewStudents} />
+                  </React.Fragment>
                 : <div>
                     <Button variant="outline-primary" style={{position: 'absolute', right:0, marginRight: 70, marginTop: 15}} onClick={() => {setSelectedTest(null); setStudents(null); setLoading(true); }}>x</Button>
                     <StudentTable tests={students} loading={loading} selectedTest={selectedTest} />

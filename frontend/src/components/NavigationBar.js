@@ -10,7 +10,7 @@ const NavigationBar = (props) => {
 }
             <Navbar.Collapse>
                 <Navbar.Text>
-                    Hello, {props.username}!
+                    Welcome, {props.username}!
                 </Navbar.Text>
             </Navbar.Collapse>
             {/* <Navbar.Toggle aria-controls="basic-navbar-nav" /> */}

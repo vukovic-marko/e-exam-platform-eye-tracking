@@ -24,7 +24,6 @@ const Register = (props) => {
               props.setUser((({_id, username, role}) => ({_id, username, role}))(decodeToken(resp.data.accessToken)));
               props.setLoading(false);
               history.push('/');
-              // window.location.reload();
              })
              .catch((err) => {
                console.log('err', err);
@@ -41,13 +40,12 @@ const Register = (props) => {
                   <Form.Label>Username</Form.Label>
                   <Form.Control name="username" type="string" placeholder="Enter username" />
                 </Form.Group>
-
                 <Form.Group controlId="formBasicPassword">
                   <Form.Label>Password</Form.Label>
                   <Form.Control name="password" type="password" placeholder="Enter password" />
                 </Form.Group>
                 <Button variant="primary" type="submit">
-                  Login
+                  Log in
                 </Button>
                 <Button variant="link" onClick={() => history.push('/register')}>
                   Don't have an account?

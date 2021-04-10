@@ -49,7 +49,7 @@ const Register = () => {
                 </Form.Group>
 
                 <Button variant="primary" type="submit">
-                  Register
+                  Sign up
                 </Button>
                 <Button variant="link" onClick={() => history.push('/login')}>
                   Already have an account?

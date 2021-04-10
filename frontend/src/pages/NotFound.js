@@ -12,8 +12,9 @@ const NotFound = () => {
     }
 
     return (
-        <div>
-            404
+        <div style={{display: 'flex', width: window.innerWidth, height: window.innerHeight, justifyContent: 'center', alignItems: 'center', flexDirection: 'column'}}>
+            <h1>404 - PAGE NOT FOUND</h1>
+            <p>You have requested a page that does not exist.</p>
             <Button onClick={goHome}>Go Home</Button>
         </div>
     )
