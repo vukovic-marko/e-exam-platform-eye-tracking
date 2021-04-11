@@ -3,6 +3,7 @@ import Spinner from 'react-bootstrap/Spinner';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import axios from 'axios';
+import useWebSocket from 'react-use-websocket';
 
 const Test = (props) => {
 
@@ -12,6 +13,31 @@ const Test = (props) => {
     const [loading, setLoading] = useState(true);
 
     const [answers, setAnswers] = useState({});
+
+    const socketUrl = 'ws://127.0.0.1:43333';
+
+    const {
+        sendMessage,
+        // sendJsonMessage,
+        // lastMessage,
+        lastJsonMessage,
+        readyState, // za loading ili tako nesto
+        // getWebSocket
+    } = useWebSocket(socketUrl, {
+        onOpen: () => {
+            sendMessage('AppKeyDemo')
+        },
+        shouldReconnect: (closeEvent) => true // TODO CHECK
+    })
+
+    useEffect(() => {
+      if (lastJsonMessage && lastJsonMessage.GazeX && lastJsonMessage.GazeY && question && question.question) {
+        // console.log(question.question._id, lastJsonMessage.GazeX, lastJsonMessage.GazeY);
+        let temp = JSON.parse(JSON.stringify(answers));
+        temp[temp.findIndex(q => q.question_id===question.question._id)].gaze_data.push({GazeX: lastJsonMessage.GazeX, GazeY: lastJsonMessage.GazeY});
+        setAnswers(temp);
+      }
+    }, [lastJsonMessage, question])
     
     // useEffect(() => {
     //     console.log('component initialized')
@@ -50,10 +76,6 @@ const Test = (props) => {
             setError('Test does not have any questions. Please contact your teacher.')
         }
     }, [test]);
-
-    useEffect(() => {
-        // TODO ADD CODE TO RECORD GAZE DATA
-    }, [question]);
 
     const previous = () => {
         if (question.no !== 0) {
