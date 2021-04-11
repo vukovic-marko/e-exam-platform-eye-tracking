@@ -5,9 +5,6 @@ import Spinner from 'react-bootstrap/Spinner';
 import dayjs from 'dayjs';
 
 const StudentTable = (props) => {
-
-    // TODO DODATI LOADING KAO NA POCENOJ STRANICI
-
     return (
         <React.Fragment>
             <Container>

@@ -142,8 +142,7 @@ router.post('/:id', verifyAccessToken, verifyStudent, asyncHandler(async (req, r
 
   let points = 0;
 
-    if (submittedTest.type === MULTIPLE_CHOICE) {
-
+  if (submittedTest.test.type === MULTIPLE_CHOICE) {
     submittedTest.test.questions.forEach((question, idx) => {
       const correct_answer = question.answers.find(answer => answer.correct === true);
       

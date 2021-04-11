@@ -29,25 +29,17 @@ const Teacher = (props) => {
              })
     }
 
-    const viewStudentsPromise = (id) => {
-        return new Promise((resolve, reject) => {
-            axios.get(`http://localhost:5000/test/${id}?page=1&limit=15`, {headers: {Authorization: `Bearer ${props.token}`}})
-                 .then(resp => {
-                     resolve(resp);
-                 })
-                 .catch(err => {
-                     reject(err);
-                 })
-        })
-    }
-
     const viewStudents = (id, title, type) => {
         setSelectedTest({title: title, type: type});
-        viewStudentsPromise(id)
-            .then((resp) => {
+        axios.get(`http://localhost:5000/test/${id}?page=1&limit=15`, {headers: {Authorization: `Bearer ${props.token}`}})
+             .then(resp => {
                 setStudents(resp.data.docs);
                 setLoading(false);
-            })
+             })
+             .catch(err => {
+                console.log('err', err);
+             })
+            
     }
 
     return (

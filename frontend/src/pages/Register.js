@@ -8,26 +8,26 @@ import axios from 'axios';
 const Register = () => {
 
     const [userDetails, setUserDetails] = useState({});
+    
     const history = useHistory();
 
     const handleChange = e => {
         setUserDetails({...userDetails, [e.target.name] : e.target.value });
       }
     
-      const handleSubmit = e => {
-        e.preventDefault();
+    const handleSubmit = e => {
+      e.preventDefault();
+  
+      axios.post('http://localhost:5000/user/register', userDetails)
+            .then((resp) => {
+            history.push('/login');
+            // window.location.reload();
+            })
+            .catch((err) => {
+              console.log('err', err);
+            })
     
-        axios.post('http://localhost:5000/user/register', userDetails)
-             .then((resp) => {
-              history.push('/login');
-              // window.location.reload();
-             })
-             .catch((err) => {
-               console.log('err', err);
-             })
-      
-      }
-
+    }
 
     return (
         <div>

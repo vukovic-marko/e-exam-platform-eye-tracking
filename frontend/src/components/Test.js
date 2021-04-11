@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Spinner from 'react-bootstrap/Spinner';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
+import axios from 'axios';
 
 const Test = (props) => {
 
@@ -9,6 +10,14 @@ const Test = (props) => {
     const [question, setQuestion] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    const [answers, setAnswers] = useState({});
+    
+    // useEffect(() => {
+    //     console.log('component initialized')
+
+    //     return (() => console.log('component destroyed'))
+    // }, []);
 
     useEffect(() => {
         if (test && test.questions && test.questions.length) {
@@ -18,6 +27,25 @@ const Test = (props) => {
                 question: test.questions[0],
                 length: test.questions.length
             });
+
+            let temp_answers = [];
+
+            test.questions.forEach((e, i) => {
+                console.log(i, e);
+                
+                let temp_answer = {}
+                temp_answer.question_id = e._id;
+                temp_answer.answer = '';
+                temp_answer.gaze_data = [];
+                if (e.question_type === 'MULTIPLE_CHOICE') {
+                    temp_answer.answer_id = undefined;
+                }
+
+                temp_answers.push(temp_answer);
+            })
+
+            setAnswers(temp_answers);
+
         } else {
             setError('Test does not have any questions. Please contact your teacher.')
         }
@@ -47,6 +75,44 @@ const Test = (props) => {
         }
     }
 
+    const handleToggleChange = (e) => {
+        console.log(e);
+        for (let c = 0; c<question.question.answers.length; c++) {
+            if (e.target.form[c].attributes.answer_id.value !== e.target.attributes.answer_id.value) {
+                e.target.form[c].checked = false;
+            }
+        }
+
+        let temp = JSON.parse(JSON.stringify(answers));
+        temp[temp.findIndex(q => q.question_id === question.question._id)].answer_id = e.target.attributes.answer_id.value;
+        temp[temp.findIndex(q => q.question_id === question.question._id)].answer = e.target.nextSibling.innerHTML;
+        
+        setAnswers(temp);
+
+    }
+
+    const handleTextareaChanged = (e) => {
+        let temp = JSON.parse(JSON.stringify(answers));
+        temp[temp.findIndex(q => q.question_id === question.question._id)].answer = e.target.value;
+        
+        setAnswers(temp);
+    }
+
+    const handleSubmitAnswers = () => {
+        axios.post(`http://localhost:5000/test/${props.test._id}`, {answers: answers}, { headers: { Authorization: `Bearer ${props.token}` }})
+             .then((resp) => {
+                 let msg = 'Test successfully submitted. ';
+                 if (resp.data.test.type === 'MULTIPLE_CHOICE')
+                    msg += `You have received ${resp.data.points}/${resp.data.test.test_points} points!`;
+                 
+                 alert(msg);
+                 window.location.reload();
+             })
+             .catch((err) => {
+                console.log('err', err);
+             })
+    }
+
     return (
         <React.Fragment>
            {!loading
@@ -60,19 +126,19 @@ const Test = (props) => {
                         <h2>{question.question.question}</h2>
                             {question.question.question_type === "MULTIPLE_CHOICE"
                                 ? <Form style={{marginTop: 50}}>
-                                    {question.question.answers.map((e,i) => 
-                                        <Form.Group key={i} controlId="formBasicCheckbox">
-                                            <Form.Check type="checkbox" label={e.answer} />
-                                        </Form.Group>
-                                    )}
+                                    <Form.Group controlId="formBasicCheckbox">
+                                        {question.question.answers.map((e,i) => 
+                                                <Form.Check checked={answers[answers.findIndex(q => q.question_id===question.question._id)].answer_id === e._id ? true : false} key={i} answer_id={e._id} type="checkbox" label={e.answer} onChange={handleToggleChange}/>
+                                        )}
+                                    </Form.Group>
                                   </Form>
                                 : <Form style={{marginTop: 50, width: 350}}>
                                     <Form.Group controlId="essay_anser">
-                                        <Form.Control as="textarea" rows={3} />
+                                        <Form.Control as="textarea" rows={3} value={answers[answers.findIndex(q => q.question_id===question.question._id)].answer} onChange={handleTextareaChanged}/>
                                     </Form.Group>
                                   </Form>
                             }
-                        <Button variant="primary" onClick={() => alert('TODO')} style={{position: 'absolute', right: 0, top: 0, marginTop: 10, marginRight: 10}}>Submit</Button>
+                        <Button variant="primary" onClick={handleSubmitAnswers} style={{position: 'absolute', right: 0, top: 0, marginTop: 10, marginRight: 10}}>Submit</Button>
                         <Button variant="outline-primary" onClick={() => props.setSelectedTest(null)} style={{position: 'absolute', right: 0, top: 0, marginTop: 10, marginRight: 95}}>Leave</Button>
                         <Button disabled={question.no === 0 ? true : false} onClick={previous} style={{position: 'absolute', left:0, top: '50%', height: 40, marginTop: -20, marginLeft: 10}}>←</Button>
                         <Button disabled={question.no === question.length - 1 ? true : false} onClick={next} style={{position: 'absolute', right:0, top: '50%', height: 40, marginTop: -20, marginRight: 10}}>→</Button>

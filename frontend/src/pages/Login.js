@@ -20,10 +20,10 @@ const Register = (props) => {
     
         axios.post('http://localhost:5000/user/login', userDetails, { withCredentials: true })
              .then((resp) => {
-              props.setToken(resp.data.accessToken);
-              props.setUser((({_id, username, role}) => ({_id, username, role}))(decodeToken(resp.data.accessToken)));
-              props.setLoading(false);
-              history.push('/');
+                props.setToken(resp.data.accessToken);
+                props.setUser((({_id, username, role}) => ({_id, username, role}))(decodeToken(resp.data.accessToken)));
+                props.setLoading(false);
+                history.push('/');
              })
              .catch((err) => {
                console.log('err', err);

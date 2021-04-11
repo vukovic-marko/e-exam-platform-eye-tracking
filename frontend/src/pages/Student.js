@@ -45,7 +45,7 @@ const Student = (props) => {
                     <TestDeck docs={docs} loadTests={loadTests} token={props.token} caption="Take Test" callback={openTest} />
                   </React.Fragment>
                 : <React.Fragment>
-                    <Test test={selectedTest} setSelectedTest={setSelectedTest} />
+                    <Test test={selectedTest} setSelectedTest={setSelectedTest} token={props.token}/>
                   </React.Fragment>
             }
         </React.Fragment>
