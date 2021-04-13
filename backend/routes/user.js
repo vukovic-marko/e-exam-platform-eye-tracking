@@ -34,7 +34,7 @@ router.post('/register', asyncHandler(async (req, res) => {
 router.post('/login', asyncHandler(async (req, res) => {
 
   const { error } = validateLogin(req.body);
-  if (error) throw createError(400, error.details);
+  if (error) throw createError(400, {message : error.details});
 
   const user = await User.findOne({username: req.body.username});
   if (!user) throw createError(401, 'Username and/or password error.');
