@@ -5,12 +5,14 @@ import TestDeck from '../components/TestDeck';
 import Button from 'react-bootstrap/Button';
 import StudentTable from '../components/StudentTable';
 import useRefreshToken from '../hooks/useRefreshToken';
+import TeacherTest from '../components/TeacherTest';
 
 const Teacher = (props) => {
 
     const [docs, setDocs] = useState({});
     const [students, setStudents] = useState();
     const [selectedTest, setSelectedTest] = useState(null);
+    const [selectedSubmittedTest, setSelectedSubmittedTest] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useRefreshToken(props.setToken);
@@ -42,18 +44,35 @@ const Teacher = (props) => {
             
     }
 
+    const handleOpenTest = (e, id) => {
+        e.preventDefault();
+
+        axios.get(`http://localhost:5000/test/result/${id}`, { headers: { Authorization : `Bearer ${props.token}` } })
+             .then(resp => {
+                 setSelectedSubmittedTest(resp.data);
+             })
+             .catch(err => {
+                 console.log('err', err);
+             })
+    }
+
     return (
         <React.Fragment>
-            <NavigationBar username={props.user.username} logout={props.logout} />
-            {!selectedTest 
-                ? <React.Fragment>
-                    <h1 style={{textAlign: 'center', marginTop: 20}}>Created Tests</h1>
-                    <TestDeck docs={docs} loadTests={loadTests} token={props.token} caption="View Students" callback={viewStudents} />
-                  </React.Fragment>
-                : <div>
-                    <Button variant="outline-primary" style={{position: 'absolute', right:0, marginRight: 70, marginTop: 15}} onClick={() => {setSelectedTest(null); setStudents(null); setLoading(true); }}>x</Button>
-                    <StudentTable tests={students} loading={loading} selectedTest={selectedTest} />
-                  </div>
+            {!selectedSubmittedTest    
+                ? !selectedTest 
+                    ? <React.Fragment>
+                        <NavigationBar username={props.user.username} logout={props.logout} />
+                        <h1 style={{textAlign: 'center', marginTop: 20}}>Created Tests</h1>
+                        <TestDeck docs={docs} loadTests={loadTests} token={props.token} caption="View Students" callback={viewStudents} />
+                    </React.Fragment>
+                    : <div>
+                        <NavigationBar username={props.user.username} logout={props.logout} />
+                        <Button variant="outline-primary" style={{position: 'absolute', right:0, marginRight: 70, marginTop: 15}} onClick={() => {setSelectedTest(null); setStudents(null); setLoading(true); }}>x</Button>
+                        <StudentTable tests={students} loading={loading} selectedTest={selectedTest} handleOpenTest={handleOpenTest} />
+                    </div>
+                : <React.Fragment>
+                    <TeacherTest test={selectedSubmittedTest} setSelectedSubmittedTest={setSelectedSubmittedTest}/>
+                  </React.Fragment>    
             }
         </React.Fragment>
     )

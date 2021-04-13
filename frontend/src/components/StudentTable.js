@@ -31,7 +31,7 @@ const StudentTable = (props) => {
                                                     {item.submitted_at ? dayjs(item.submitted_at).format('DD/MM/YYYY HH:mm') : '-'}
                                                 </td>
                                                 <td>
-                                                    {item.student.username}
+                                                    <a href="" onClick={(e) => props.handleOpenTest(e, item._id)}>{item.student.username}</a>
                                                 </td>
                                             </tr>    
                                         )}

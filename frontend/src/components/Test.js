@@ -14,36 +14,46 @@ const Test = (props) => {
 
     const [answers, setAnswers] = useState({});
 
-    const socketUrl = 'ws://127.0.0.1:43333';
+    const [socketUrl, setSocketUrl] = useState('ws://127.0.0.1:43333');
+
 
     const {
         sendMessage,
         // sendJsonMessage,
         // lastMessage,
         lastJsonMessage,
-        readyState, // za loading ili tako nesto
-        // getWebSocket
+        // readyState, // za loading ili tako nesto
+        getWebSocket
     } = useWebSocket(socketUrl, {
+        share: false,
         onOpen: () => {
             sendMessage('AppKeyDemo')
+        },
+        onClose: () => {
+            console.log('websocket connection closed')
         },
         shouldReconnect: (closeEvent) => true // TODO CHECK
     })
 
     useEffect(() => {
       if (lastJsonMessage && lastJsonMessage.GazeX && lastJsonMessage.GazeY && question && question.question) {
-        // console.log(question.question._id, lastJsonMessage.GazeX, lastJsonMessage.GazeY);
         let temp = JSON.parse(JSON.stringify(answers));
+
         temp[temp.findIndex(q => q.question_id===question.question._id)].gaze_data.push({GazeX: lastJsonMessage.GazeX, GazeY: lastJsonMessage.GazeY});
+
         setAnswers(temp);
       }
-    }, [lastJsonMessage, question])
+    }, [lastJsonMessage, question]) // TRAZI ANSWERS U DEPENDECY-u ali mozda naci neku alternativu?
     
-    // useEffect(() => {
-    //     console.log('component initialized')
+    useEffect(() => {
+        console.log('component initialized')
 
-    //     return (() => console.log('component destroyed'))
-    // }, []);
+        // OBAVLJA LI OVO SVOJ POSAO ILI SE SAMA KONEKCIJA ISKLJUCI POSLE TIMEOUT-a?
+        return (() => {
+            console.log('component destroyed')
+            getWebSocket().close();
+        })
+    }, [getWebSocket]);
 
     useEffect(() => {
         if (test && test.questions && test.questions.length) {
@@ -142,15 +152,38 @@ const Test = (props) => {
                     ? <React.Fragment>
                         {error}
                       </React.Fragment>
-                    : <div style={{display: 'flex', width: window.innerWidth, height: window.innerHeight, flexDirection: 'column', alignItems: 'center', paddingTop: 150}}>
-                        <p style={{position: 'absolute', left: 0, top: 0, marginLeft: 15, marginTop: 10, color: 'gray'}}>{props.test.title} • {props.test.type.toLowerCase().replace('_', ' ')} type • {props.test.teacher.username}</p>
+                    : <div style={{
+                        display: 'flex', 
+                        width: window.innerWidth, 
+                        height: window.innerHeight, 
+                        flexDirection: 'column', 
+                        alignItems: 'center', 
+                        paddingTop: 125
+                      }}>
+                        <p style={{
+                            position: 'absolute', 
+                            left: 0, 
+                            top: 0, 
+                            marginLeft: 15, 
+                            marginTop: 10, 
+                            color: 'gray'
+                        }}>
+                            {props.test.title} • {props.test.type.toLowerCase().replace('_', ' ')} type • {props.test.teacher.username}
+                        </p>
                         <h2>{question.no+1}/{question.length}</h2>
                         <h2>{question.question.question}</h2>
                             {question.question.question_type === "MULTIPLE_CHOICE"
                                 ? <Form style={{marginTop: 50}}>
                                     <Form.Group controlId="formBasicCheckbox">
                                         {question.question.answers.map((e,i) => 
-                                                <Form.Check checked={answers[answers.findIndex(q => q.question_id===question.question._id)].answer_id === e._id ? true : false} key={i} answer_id={e._id} type="checkbox" label={e.answer} onChange={handleToggleChange}/>
+                                                <Form.Check 
+                                                    checked={answers[answers.findIndex(q => q.question_id===question.question._id)].answer_id === e._id ? true : false} 
+                                                    key={i} 
+                                                    answer_id={e._id} 
+                                                    type="checkbox" 
+                                                    label={e.answer} 
+                                                    onChange={handleToggleChange}
+                                                />
                                         )}
                                     </Form.Group>
                                   </Form>
