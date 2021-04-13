@@ -3,6 +3,7 @@ import Spinner from 'react-bootstrap/Spinner';
 import Button from 'react-bootstrap/Button';
 import ReactDOMServer from 'react-dom/server';
 import Chart from 'react-google-charts';
+import { Stage, Layer, Rect, Text, Label } from 'react-konva';
 
 const Tooltip = (data) => {
     return (
@@ -12,11 +13,38 @@ const Tooltip = (data) => {
         paddingBottom: 5
       }}>
         <h3>{data.caption}</h3>
-        <b>{data.count}</b> {data.count == 1 ? 'point' : 'points'} out of <b>{data.sequence_length}</b> total <br/>
+        <b>{data.count}</b> {data.count === 1 ? 'point' : 'points'} out of <b>{data.sequence_length}</b> total <br/>
         <b>{(data.percentage*100).toFixed(2)}%</b> of a sequence
       </div>
     )
-  }
+}
+
+const AreaOfInterest = (props) => {
+
+    const { area, idx } = props;    
+    const width = area.bottom_right.x2 - area.top_left.x1;
+    const height = area.bottom_right.y2 - area.top_left.y1;
+
+    const getColor = (id) => {
+        const colors = ['#3581D8', '#D82E3F', '#FFE135', '#63CAD8', '#28CC2D'];
+
+        return colors[id % 5];
+    }
+
+    return (
+        <Label x={area.top_left.x1} y={area.top_left.y1}>
+            <Text x={5} y={height-15} text={area.caption}/>
+            <Rect
+                x={0}
+                y={0}
+                width={width}
+                height={height}
+                stroke={getColor(idx+1).toString()}
+            />  
+        </Label>
+    );
+
+}
 
 const Test = (props) => {
 
@@ -175,6 +203,15 @@ const Test = (props) => {
 
     return (
         <React.Fragment>
+            <Stage style={{position: 'absolute', left: 0, top: 0}} width={window.innerWidth} height={window.innerHeight}>
+                <Layer>
+                    {
+                        question && question.question && question.question.areas_of_interest && question.question.areas_of_interest.map((area, idx) => {
+                            return <AreaOfInterest key={idx} area={area} idx={idx} /> 
+                        }
+                    )}
+                </Layer>
+            </Stage>
            {!loading
                 ? error
                     ? <React.Fragment>
@@ -191,7 +228,7 @@ const Test = (props) => {
                             {question.question.question_type === "MULTIPLE_CHOICE"
                                 ? <ol type="a">
                                     {question.question.answers.map((item, idx) =>
-                                        <li ket={idx} style={item.correct ? {color: 'green'} : question.answer.answer_id === item._id ? {color: 'red'} : {color: 'black'}}>{item.answer}</li>
+                                        <li key={idx} style={item.correct ? {color: 'green'} : question.answer.answer_id === item._id ? {color: 'red'} : {color: 'black'}}>{item.answer}</li>
                                     )}
                                   </ol>
                                 : <p>{question.answer.answer}</p>
@@ -233,20 +270,6 @@ const Test = (props) => {
                                     />
                                     <span>total</span>
                                 </div>
-                                {/* <Chart
-                                    width={'800px'}
-                                    height={'200px'}
-                                    chartType="Timeline"
-                                    loader={<div>Loading Chart</div>}
-                                    data={question.sequence_data}
-                                    options={{
-                                        allowHtml: true,
-                                        // timeline: {
-                                        //   groupByRowLabel: false,
-                                        // }
-                                    }}
-                                    // rootProps={{ 'data-testid': '2' }}
-                                /> */}
                             </div>
                         }
                       </div>

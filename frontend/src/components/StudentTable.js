@@ -2,6 +2,7 @@ import React from 'react';
 import Table from 'react-bootstrap/Table';
 import Container from 'react-bootstrap/Container';
 import Spinner from 'react-bootstrap/Spinner';
+import Button from 'react-bootstrap/Button';
 import dayjs from 'dayjs';
 
 const StudentTable = (props) => {
@@ -31,7 +32,7 @@ const StudentTable = (props) => {
                                                     {item.submitted_at ? dayjs(item.submitted_at).format('DD/MM/YYYY HH:mm') : '-'}
                                                 </td>
                                                 <td>
-                                                    <a href="" onClick={(e) => props.handleOpenTest(e, item._id)}>{item.student.username}</a>
+                                                    <Button style={{padding: 0}} variant="link" onClick={(e) => props.handleOpenTest(e, item._id)}>{item.student.username}</Button>
                                                 </td>
                                             </tr>    
                                         )}
