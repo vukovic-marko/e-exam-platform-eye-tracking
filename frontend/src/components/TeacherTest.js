@@ -3,48 +3,9 @@ import Spinner from 'react-bootstrap/Spinner';
 import Button from 'react-bootstrap/Button';
 import ReactDOMServer from 'react-dom/server';
 import Chart from 'react-google-charts';
-import { Stage, Layer, Rect, Text, Label } from 'react-konva';
-
-const Tooltip = (data) => {
-    return (
-      <div style= {{
-        paddingLeft: 5,
-        paddingRight: 5,
-        paddingBottom: 5
-      }}>
-        <h3>{data.caption}</h3>
-        <b>{data.count}</b> {data.count === 1 ? 'point' : 'points'} out of <b>{data.sequence_length}</b> total <br/>
-        <b>{(data.percentage*100).toFixed(2)}%</b> of a sequence
-      </div>
-    )
-}
-
-const AreaOfInterest = (props) => {
-
-    const { area, idx } = props;    
-    const width = area.bottom_right.x2 - area.top_left.x1;
-    const height = area.bottom_right.y2 - area.top_left.y1;
-
-    const getColor = (id) => {
-        const colors = ['#3581D8', '#D82E3F', '#FFE135', '#63CAD8', '#28CC2D'];
-
-        return colors[id % 5];
-    }
-
-    return (
-        <Label x={area.top_left.x1} y={area.top_left.y1}>
-            <Text x={5} y={height-15} text={area.caption}/>
-            <Rect
-                x={0}
-                y={0}
-                width={width}
-                height={height}
-                stroke={getColor(idx+1).toString()}
-            />  
-        </Label>
-    );
-
-}
+import { Stage, Layer } from 'react-konva';
+import Tooltip from './Tooltip';
+import AreaOfInterest from './AreaOfInterest';
 
 const Test = (props) => {
 
@@ -54,150 +15,86 @@ const Test = (props) => {
 
     const { test } = props;
 
-    useEffect(() => {
-        if (test) {
+    const changeQuestion = (n) => {
+
+        let i = 0;
+
+        if (n) {
+            i = question.no+n;
+        }
+
+        let arr = [[
+            { type: 'string', id: 'caption' },
+            { type: 'string', id: 'dummy bar label' },
+            { type: 'string', role: 'tooltip' },
+            { type: 'number', id: 'start' },
+            { type: 'number', id: 'end' }
+        ]]
+          
+        test.submitted_answers[i].crunched_gaze_data.sequence.forEach(element => {
+            element.tooltip = ReactDOMServer.renderToStaticMarkup(
+                <Tooltip 
+                    count={element.count} 
+                    caption={element.caption} 
+                    sequence_length={test.submitted_answers[i].crunched_gaze_data.sequence_length} 
+                    percentage={element.percentage} 
+                />
+            )
             
-            let arr = [
-                [
-                { type: 'string', id: 'caption' },
-                { type: 'string', id: 'dummy bar label' },
-                { type: 'string', role: 'tooltip' },
-                { type: 'number', id: 'start' },
-                { type: 'number', id: 'end' }]
-              ]
-              
-            test.submitted_answers[0].crunched_gaze_data.sequence.forEach(element => {
-                element.tooltip = ReactDOMServer.renderToStaticMarkup(
-                    <Tooltip 
-                        count={element.count} 
-                        caption={element.caption} 
-                        sequence_length={test.submitted_answers[0].crunched_gaze_data.sequence_length} 
-                        percentage={element.percentage} 
-                    />
-                )
-                
-                arr.push([
-                    element.caption,
-                    null,
-                    element.tooltip,
-                    element.start,
-                    element.end
-                ])
-            })
+            arr.push([
+                element.caption,
+                null,
+                element.tooltip,
+                element.start,
+                element.end
+            ])
+        })
 
-            let arr1 = [['Area of interest', 'Total']]
+        let arr1 = [['Area of interest', 'Total']]
 
-            test.submitted_answers[0].crunched_gaze_data.summary.forEach(element => {
-                arr1.push([element.caption, element.count])
-            })
+        test.submitted_answers[i].crunched_gaze_data.summary.forEach(element => {
+            arr1.push([element.caption, element.count])
+        })
 
-            setLoading(false);
+        if (n != 0) {
             setQuestion({
-                no: 0,
-                question: test.test.questions[0],
-                answer: test.submitted_answers[0],
-                length: test.test.questions.length,
+                ...question,
+                question: test.test.questions[i],
+                answer: test.submitted_answers[i],
+                no : i,
                 sequence_data: arr,
                 summary_data: arr1
             })
-            
+        } else {
+            setLoading(false)
+            setQuestion({
+                length: test.test.questions.length,
+                question: test.test.questions[i],
+                answer: test.submitted_answers[i],
+                no : i,
+                sequence_data: arr,
+                summary_data: arr1
+            })
+        }
+    } 
+
+    useEffect(() => {
+        if (test) {
+            changeQuestion(0);            
         }
     }, [test]);
 
+    
 
     const previous = () => {
         if (question.no !== 0) {
-
-            let arr = [
-                [
-                { type: 'string', id: 'caption' },
-                { type: 'string', id: 'dummy bar label' },
-                { type: 'string', role: 'tooltip' },
-                { type: 'number', id: 'start' },
-                { type: 'number', id: 'end' }]
-              ]
-              
-            test.submitted_answers[question.no-1].crunched_gaze_data.sequence.forEach(element => {
-                element.tooltip = ReactDOMServer.renderToStaticMarkup(
-                    <Tooltip 
-                        count={element.count} 
-                        caption={element.caption} 
-                        sequence_length={test.submitted_answers[question.no-1].crunched_gaze_data.sequence_length} 
-                        percentage={element.percentage} 
-                    />
-                )
-                
-                arr.push([
-                    element.caption,
-                    null,
-                    element.tooltip,
-                    element.start,
-                    element.end
-                ])
-            })
-
-            let arr1 = [['Area of interest', 'Total']]
-
-            test.submitted_answers[question.no-1].crunched_gaze_data.summary.forEach(element => {
-                arr1.push([element.caption, element.count])
-            })
-
-            setQuestion({
-                ...question,
-                question: test.test.questions[question.no - 1],
-                answer: test.submitted_answers[question.no - 1],
-                no : question.no - 1,
-                sequence_data: arr,
-                summary_data: arr1
-            })
+            changeQuestion(-1);
         }
     }
 
     const next = () => {
         if (question.no !== question.length - 1) {
-            
-            let arr = [
-                [
-                { type: 'string', id: 'caption' },
-                { type: 'string', id: 'dummy bar label' },
-                { type: 'string', role: 'tooltip' },
-                { type: 'number', id: 'start' },
-                { type: 'number', id: 'end' }]
-              ]
-              
-            test.submitted_answers[question.no + 1].crunched_gaze_data.sequence.forEach(element => {
-                element.tooltip = ReactDOMServer.renderToStaticMarkup(
-                    <Tooltip 
-                        count={element.count} 
-                        caption={element.caption} 
-                        sequence_length={test.submitted_answers[question.no+1].crunched_gaze_data.sequence_length} 
-                        percentage={element.percentage} 
-                    />
-                )
-                
-                arr.push([
-                    element.caption,
-                    null,
-                    element.tooltip,
-                    element.start,
-                    element.end
-                ])
-            })
-
-            let arr1 = [['Area of interest', 'Total']]
-
-            test.submitted_answers[question.no+1].crunched_gaze_data.summary.forEach(element => {
-                arr1.push([element.caption, element.count])
-            })
-
-            setQuestion({
-                ...question,
-                question: test.test.questions[question.no + 1],
-                answer: test.submitted_answers[question.no + 1],
-                no : question.no + 1,
-                sequence_data: arr,
-                summary_data: arr1
-            })
+            changeQuestion(1);
         }
     }
 
@@ -243,16 +140,18 @@ const Test = (props) => {
                                         width={'850px'}
                                         height={'200px'}
                                         chartType="Timeline"
-                                        loader={<div>Loading Chart</div>}
+                                        loader={
+                                            <div style={{display: 'flex', width: "850px", height: "200px", justifyContent: 'center', alignItems: 'center'}}>
+                                                <Spinner animation="border" role="status">
+                                                    <span className="sr-only">Loading...</span>
+                                                </Spinner>
+                                            </div>
+                                        }
                                         data={question.sequence_data}
                                         options={{
                                             allowHtml: true,
                                             colors: ['#3581D8', '#D82E3F', '#FFE135', '#63CAD8', '#28CC2D']
-                                            // timeline: {
-                                            //   groupByRowLabel: false,
-                                            // }
                                         }}
-                                        // rootProps={{ 'data-testid': '2' }}
                                     />
                                     <span>sequence</span>
                                 </div>
@@ -261,7 +160,13 @@ const Test = (props) => {
                                         width={'450px'}
                                         height={'275px'}
                                         chartType="PieChart"
-                                        loader={<div>Loading Chart</div>}
+                                        loader={
+                                            <div style={{display: 'flex', justifyContent: 'center',  width: "450px", height: "275px",  alignItems: 'center'}}>
+                                                <Spinner animation="border" role="status">
+                                                    <span className="sr-only">Loading...</span>
+                                                </Spinner>
+                                            </div>
+                                        }
                                         data={question.summary_data}
                                         options={{
                                             colors: ['#3581D8', '#D82E3F', '#FFE135', '#63CAD8', '#28CC2D']
