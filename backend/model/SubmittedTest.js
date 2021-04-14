@@ -44,7 +44,7 @@ const schema = mongoose.Schema({
             question: {
                 type: String
             },
-            questions_type: {
+            type: {
                 type: String
             },
             answers: [{

@@ -29,7 +29,7 @@ const schema = mongoose.Schema({
         question: {
             type: String
         },
-        question_type: {
+        type: {
             type: String
         },
         answers: [{
