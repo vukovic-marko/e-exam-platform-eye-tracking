@@ -73,7 +73,7 @@ const Test = (props) => {
                 temp_answer.question_id = e._id;
                 temp_answer.answer = '';
                 temp_answer.gaze_data = [];
-                if (e.question_type === 'MULTIPLE_CHOICE') {
+                if (e.type === 'MULTIPLE_CHOICE') {
                     temp_answer.answer_id = undefined;
                 }
 
@@ -172,7 +172,7 @@ const Test = (props) => {
                         </p>
                         <h2>{question.no+1}/{question.length}</h2>
                         <h2>{question.question.question}</h2>
-                            {question.question.question_type === "MULTIPLE_CHOICE"
+                            {question.question.type === "MULTIPLE_CHOICE"
                                 ? <Form style={{marginTop: 50}}>
                                     <Form.Group controlId="formBasicCheckbox">
                                         {question.question.answers.map((e,i) => 
