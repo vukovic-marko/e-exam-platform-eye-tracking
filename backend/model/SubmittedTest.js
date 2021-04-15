@@ -33,7 +33,7 @@ const schema = mongoose.Schema({
         },
         type: {
             type: String,
-            enum: ['MULTIPLE_CHOICE', 'ESSAY'],
+            enum: ['MULTIPLE_CHOICE', 'ESSAY', 'MIXED'],
             required: true
         },
         title: {
