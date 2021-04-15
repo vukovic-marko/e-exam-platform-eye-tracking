@@ -7,6 +7,7 @@ import { Stage, Layer } from 'react-konva';
 import Tooltip from './Tooltip';
 import AreaOfInterest from './AreaOfInterest';
 import CreateQuestionModal from './CreateQuestionModal';
+import CreateAreaOfInterestModal from './CreateAreaOfInterestModal';
 
 const MODE_VIEW = "MODE_VIEW";
 const MODE_CREATE = "MODE_CREATE";
@@ -18,6 +19,7 @@ const Test = (props) => {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showCreateQuestionModal, setShowCreateQuestionModal] = useState(false);
+    const [showCreateAreaOfInterestModal, setShowCreateAreaOfInterestModal] = useState(false);
 
     const [test, setTest] = useState(props.test);
 
@@ -133,15 +135,62 @@ const Test = (props) => {
 
     }
 
-    const addNewArea = () => {
+    const addNewArea = (areaDetails) => {
+        setQuestion({
+            ...question,
+            question: {
+                ...question.question,
+                areas_of_interest: [
+                    ...question.question.areas_of_interest,
+                    {
+                        caption: areaDetails.caption,
+                        top_left: {
+                            x1: 100,
+                            y1: 100
+                        },
+                        bottom_right: {
+                            x2: 300,
+                            y2: 300
+                        }
+                    }
+                ]
+            }
+        })
 
+        let temp = JSON.parse(JSON.stringify(test.test.questions));
+        temp[question.no].areas_of_interest.push({
+            caption: areaDetails.caption,
+                        top_left: {
+                            x1: 100,
+                            y1: 100
+                        },
+                        bottom_right: {
+                            x2: 300,
+                            y2: 300
+                        }
+        })
+        setTest({
+            ...test,
+            test: {
+                ...test.test,
+                questions: temp
+            }
+        })
+
+        setShowCreateAreaOfInterestModal(false);
     }
 
     const addNewQuestionHandler = () => {
         setShowCreateQuestionModal(true);
     }
 
+    const addNewAreaOfInterestHandler = () => {
+        setShowCreateAreaOfInterestModal(true);
+    }
+
     const addNewQuestion = (q) => {
+
+        q.areas_of_interest = []
         
         if (question.length === 0) {
             setQuestion({
@@ -179,13 +228,61 @@ const Test = (props) => {
         props.createTest(test);
     }
 
+    const areaOfInterestMoved = (idx, x1, y1, x2, y2) => {
+        let areas_of_interest = JSON.parse(JSON.stringify(question.question.areas_of_interest));
+        areas_of_interest[idx] = {
+            caption: areas_of_interest[idx].caption,
+            top_left: {
+                x1: x1,
+                y1: y1
+            },
+            bottom_right: {
+                x2: x2,
+                y2: y2
+            }
+        }
+
+        setQuestion({
+            ...question,
+            question: {
+                ...question.question,
+                areas_of_interest: areas_of_interest
+            }
+        })
+
+        // TODO ADD TO TEST
+
+        let temp = JSON.parse(JSON.stringify(test.test.questions));
+        temp[question.no].areas_of_interest[idx] = {
+            caption: temp[question.no].areas_of_interest[idx].caption,
+                        top_left: {
+                            x1: x1,
+                            y1: y1
+                        },
+                        bottom_right: {
+                            x2: x2,
+                            y2: y2
+                        }
+        }
+        setTest({
+            ...test,
+            test: {
+                ...test.test,
+                questions: temp
+            }
+        })
+    }
+
     return (
         <React.Fragment>
             <Stage style={{position: 'absolute', left: 0, top: 0}} width={window.innerWidth} height={window.innerHeight}>
                 <Layer>
                     {
                         question && question.question && question.question.areas_of_interest && question.question.areas_of_interest.map((area, idx) => {
-                            return <AreaOfInterest key={idx} area={area} idx={idx} /> 
+                            if (props.mode === MODE_VIEW)
+                                return <AreaOfInterest key={idx} area={area} idx={idx} /> 
+                            else
+                                return <AreaOfInterest key={idx} area={area} idx={idx} caption={area.caption} draggable={true} areaOfInterestMoved={areaOfInterestMoved}/>
                         }
                     )}
                 </Layer>
@@ -233,9 +330,10 @@ const Test = (props) => {
                         {props.mode === MODE_CREATE &&
                             <React.Fragment>
                                 <CreateQuestionModal showModal={showCreateQuestionModal} setShowModal={setShowCreateQuestionModal} addQuestion={addNewQuestion}/>
+                                <CreateAreaOfInterestModal showModal={showCreateAreaOfInterestModal} setShowModal={setShowCreateAreaOfInterestModal} createAreaOfInterest={addNewArea}/>
                                 <div style={{position: 'absolute', bottom: 0}}>
                                     <Button onClick={handleEdit} disabled={!question.length ? true : false} variant="outline-primary" className="ml-1 mr-1">Edit Question</Button>
-                                    <Button onClick={addNewArea} disabled={!question.length ? true : false} variant="outline-primary" className="ml-1 mr-1">New Area</Button>
+                                    <Button onClick={addNewAreaOfInterestHandler} disabled={!question.length ? true : false} variant="outline-primary" className="ml-1 mr-1">New Area</Button>
                                     <Button onClick={addNewQuestionHandler} variant="outline-primary" className="ml-1 mr-1">New Question</Button>
                                     <Button onClick={createTest} variant="primary" className="ml-1 mr-1">Submit</Button>
                                 </div>

@@ -14,18 +14,41 @@ const AreaOfInterest = (props) => {
         return colors[id % 5];
     }
 
-    return (
-        <Label x={area.top_left.x1} y={area.top_left.y1}>
-            <Text x={5} y={height-15} text={area.caption}/>
-            <Rect
-                x={0}
-                y={0}
-                width={width}
-                height={height}
-                stroke={getColor(idx+1).toString()}
-            />  
-        </Label>
-    );
+    if (!props.draggable) 
+        return (
+            <Label x={area.top_left.x1} y={area.top_left.y1}>
+                <Text x={5} y={height-15} text={area.caption}/>
+                <Rect
+                    x={0}
+                    y={0}
+                    width={width}
+                    height={height}
+                    stroke={getColor(idx+1).toString()}
+                />  
+            </Label>
+        );
+    else
+        return (
+            <Label 
+                x={area.top_left.x1} 
+                y={area.top_left.y1} 
+                draggable={true}
+                onDragEnd={e => {
+                    const { x, y } = e.target._lastPos;
+                    const { height, width } = e.target.children[1].attrs;
+                    props.areaOfInterestMoved(idx, x, y, x + height, y + width);
+                }}
+            >
+                <Text x={5} y={200-15} text={props.caption}/>
+                <Rect
+                    x={0}
+                    y={0}
+                    width={200}
+                    height={200}
+                    stroke={getColor(idx+1).toString()}
+                ></Rect>
+            </Label>
+        );
 
 }
 
