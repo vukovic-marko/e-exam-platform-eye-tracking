@@ -71,6 +71,7 @@ const Teacher = (props) => {
         axios.post('http://localhost:5000/test', test, { headers: { Authorization: `Bearer ${props.token}` }})
              .then(resp => {
                  console.log(resp);
+                 window.location.reload();
              })
              .catch(err => {
                  console.log('err', err);

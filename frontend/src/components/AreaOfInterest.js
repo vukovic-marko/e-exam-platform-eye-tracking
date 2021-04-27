@@ -10,7 +10,6 @@ const AreaOfInterest = (props) => {
 
     const getColor = (id) => {
         const colors = ['#3581D8', '#D82E3F', '#FFE135', '#63CAD8', '#28CC2D'];
-
         return colors[id % 5];
     }
 

@@ -1,20 +1,38 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 
+const MODE_CREATE = "CREATE";
+const MODE_EDIT = "EDIT";
+
 const CreateQuestionModal = (props) => {
 
     const [question, setQuestion] = useState({
         question: '',
         type: "ESSAY",
-        answers: undefined
+        answers: undefined,
+        points: undefined
     });
+
+    const { mode } = props;
+
+    useEffect(() => {
+        if (props.question && props.question.question) {
+            setQuestion({
+                question: props.question.question.question,
+                type: props.question.question.type,
+                answers: props.question.question.answers,
+                points: props.question.question.points
+            })
+        }
+        
+    }, [props.question])
   
     const handleClose = () => {
-        setQuestion(null);
+        // setQuestion(null); // TODO: CHECK
         props.setShowModal(false);
     }
 
@@ -61,7 +79,11 @@ const CreateQuestionModal = (props) => {
     }
 
     const handleCreate = () => {
-        props.addQuestion(question);        
+        if (mode === MODE_CREATE) {
+            props.addQuestion(question);        
+        } else if (mode === MODE_EDIT) {
+            props.addQuestion(question, props.question.no);
+        }
     }
 
     const handleAddAnswer = () => {
@@ -81,28 +103,41 @@ const CreateQuestionModal = (props) => {
       <React.Fragment>  
         <Modal show={props.showModal} onHide={handleClose}>
           <Modal.Header closeButton>
-            <Modal.Title>New Question</Modal.Title>
+            <Modal.Title>
+                {mode === MODE_CREATE && <span>New Question</span>}
+                {mode === MODE_EDIT && <span>Edit Question</span>}
+            </Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <Form onChange={handleChange}>
                 <Form.Group controlId="formQuestion">
                     <Form.Label>Question</Form.Label>
-                    <Form.Control as="textarea" rows={3} name="question" />
+                    {mode === MODE_CREATE && <Form.Control as="textarea" rows={3} name="question" />}
+                    {mode === MODE_EDIT && <Form.Control as="textarea" rows={3} name="question" defaultValue={question.question}/>}
                 </Form.Group>
 
                 <Form.Group controlId="formQuestionType">
                     <Row>
                         <Col sm={{span: 8}}>
                             <Form.Label>Question type</Form.Label>
-                            <Form.Control name="type" as="select">
-                                <option value="ESSAY">Essay</option>
-                                <option value="MULTIPLE_CHOICE">Multiple choice</option>
-                            </Form.Control>
+                            {mode === MODE_CREATE &&
+                                <Form.Control name="type" as="select">
+                                    <option value="ESSAY">Essay</option>
+                                    <option value="MULTIPLE_CHOICE">Multiple choice</option>
+                                </Form.Control>
+                            }
+                            {mode === MODE_EDIT &&
+                                <Form.Control name="type" as="select" defaultValue={question.type}>
+                                    <option value="ESSAY">Essay</option>
+                                    <option value="MULTIPLE_CHOICE">Multiple choice</option>
+                                </Form.Control>
+                            }
                         </Col>
                         <Col sm={{span: 4}}>
                         <Form.Group controlId="formQuestion">
                             <Form.Label>Points</Form.Label>
-                            <Form.Control type="number" name="points" placeholder="Enter points" />
+                            {mode === MODE_CREATE && <Form.Control type="number" name="points" placeholder="Enter points"/>}
+                            {mode === MODE_EDIT && <Form.Control type="number" name="points" placeholder="Enter points" defaultValue={question.points}/>}
                         </Form.Group>
                         </Col>
                     </Row>

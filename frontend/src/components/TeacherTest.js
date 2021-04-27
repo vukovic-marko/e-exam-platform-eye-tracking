@@ -19,6 +19,7 @@ const Test = (props) => {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showCreateQuestionModal, setShowCreateQuestionModal] = useState(false);
+    const [showEditQuestionModal, setShowEditQuestionModal] = useState(false);
     const [showCreateAreaOfInterestModal, setShowCreateAreaOfInterestModal] = useState(false);
 
     const [test, setTest] = useState(props.test);
@@ -188,6 +189,30 @@ const Test = (props) => {
         setShowCreateAreaOfInterestModal(true);
     }
 
+    const editQuestionHandler = () => {
+        setShowEditQuestionModal(true);
+    }
+
+    const editQuestion = (q, no) => {
+        setQuestion({
+            ...question,
+            question: q
+        })
+
+        let questions = JSON.parse(JSON.stringify(test.test.questions));
+        questions[no] = q;
+
+        setTest({
+            ...test,
+            test: {
+                ...test.test,
+                questions: questions
+            }
+        })
+
+        setShowEditQuestionModal(false);
+    }
+
     const addNewQuestion = (q) => {
 
         q.areas_of_interest = []
@@ -220,8 +245,6 @@ const Test = (props) => {
         });
 
         setShowCreateQuestionModal(false)
-
-
     }
 
     const createTest = () => {
@@ -329,10 +352,11 @@ const Test = (props) => {
                         <Button disabled={question.no === question.length - 1 || !question.length ? true : false} onClick={next} style={{position: 'absolute', right:0, top: '50%', height: 40, marginTop: -20, marginRight: 10}}>→</Button>
                         {props.mode === MODE_CREATE &&
                             <React.Fragment>
-                                <CreateQuestionModal showModal={showCreateQuestionModal} setShowModal={setShowCreateQuestionModal} addQuestion={addNewQuestion}/>
+                                <CreateQuestionModal showModal={showCreateQuestionModal} setShowModal={setShowCreateQuestionModal} addQuestion={addNewQuestion} mode="CREATE"/>
+                                <CreateQuestionModal showModal={showEditQuestionModal} setShowModal={setShowEditQuestionModal} addQuestion={editQuestion} mode="EDIT" question={question}/>
                                 <CreateAreaOfInterestModal showModal={showCreateAreaOfInterestModal} setShowModal={setShowCreateAreaOfInterestModal} createAreaOfInterest={addNewArea}/>
                                 <div style={{position: 'absolute', bottom: 0}}>
-                                    <Button onClick={handleEdit} disabled={!question.length ? true : false} variant="outline-primary" className="ml-1 mr-1">Edit Question</Button>
+                                    <Button onClick={editQuestionHandler} disabled={!question.length ? true : false} variant="outline-primary" className="ml-1 mr-1">Edit Question</Button>
                                     <Button onClick={addNewAreaOfInterestHandler} disabled={!question.length ? true : false} variant="outline-primary" className="ml-1 mr-1">New Area</Button>
                                     <Button onClick={addNewQuestionHandler} variant="outline-primary" className="ml-1 mr-1">New Question</Button>
                                     <Button onClick={createTest} variant="primary" className="ml-1 mr-1">Submit</Button>
