@@ -303,9 +303,9 @@ const Test = (props) => {
                     {
                         question && question.question && question.question.areas_of_interest && question.question.areas_of_interest.map((area, idx) => {
                             if (props.mode === MODE_VIEW)
-                                return <AreaOfInterest key={idx} area={area} idx={idx} /> 
+                                return <AreaOfInterest key={idx} area={area} idx={idx}/> 
                             else
-                                return <AreaOfInterest key={idx} area={area} idx={idx} caption={area.caption} draggable={true} areaOfInterestMoved={areaOfInterestMoved}/>
+                                return <AreaOfInterest key={idx} area={area} idx={idx} caption={area.caption} draggable={true} areaOfInterestMoved={areaOfInterestMoved} />
                         }
                     )}
                 </Layer>

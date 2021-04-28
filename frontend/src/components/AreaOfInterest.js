@@ -1,8 +1,18 @@
-import React from 'react'
-import { Rect, Text, Label } from 'react-konva';
+import React, { useRef, useEffect } from 'react'
+import { Rect, Text, Label, Transformer } from 'react-konva';
 
 
 const AreaOfInterest = (props) => {
+
+    const shapeRef = useRef();
+    const trRef = useRef();
+
+    useEffect(() => {
+        if (trRef.current && trRef.current.nodes()) {
+            trRef.current.nodes([shapeRef.current]);
+            trRef.current.getLayer().batchDraw();
+        }
+    })
 
     const { area, idx } = props;    
     const width = area.bottom_right.x2 - area.top_left.x1;
@@ -35,17 +45,49 @@ const AreaOfInterest = (props) => {
                 onDragEnd={e => {
                     const { x, y } = e.target._lastPos;
                     const { height, width } = e.target.children[1].attrs;
-                    props.areaOfInterestMoved(idx, x, y, x + height, y + width);
+                    props.areaOfInterestMoved(idx, x, y, x + width, y + height);
                 }}
             >
-                <Text x={5} y={200-15} text={props.caption}/>
+                <Text x={5} y={5} text={props.caption}/>
                 <Rect
                     x={0}
                     y={0}
-                    width={200}
-                    height={200}
+                    color="red"
+                    width={width}
+                    height={height}
+                    ref={shapeRef}
+                    onTransformEnd={(e) => {
+                        // transformer is changing scale of the node
+                        // and NOT its width or height
+                        // but in the store we have only width and height
+                        // to match the data better we will reset scale on transform end
+                        const node = shapeRef.current;
+                        const scaleX = node.scaleX();
+                        const scaleY = node.scaleY();
+              
+                        // we will reset it back
+                        node.scaleX(1);
+                        node.scaleY(1);
+
+                        node.width(node.width() * scaleX)
+                        node.height(node.height() * scaleY)
+                        
+                        props.areaOfInterestMoved(idx, node.parent.x(), node.parent.y(), node.parent.x() + node.width(), node.parent.y() + node.height());
+                      }}
                     stroke={getColor(idx+1).toString()}
                 ></Rect>
+                <Transformer
+                    ref={trRef}
+                    rotateEnabled={false}
+                    borderEnabled={false}
+                    keepRatio={false}
+                    boundBoxFunc={(oldBox, newBox) => {
+                        if (newBox.width < 5 || newBox.height < 5) {
+                            return oldBox;
+                        }
+                        return newBox;
+                    }}
+                    />
             </Label>
         );
 
