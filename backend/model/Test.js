@@ -72,6 +72,46 @@ const schema = mongoose.Schema({
     }],
     test_points: {
         type: Number
+    },
+    students: [
+        {
+            student: {
+                _id: {
+                    type: String
+                },
+                username: {
+                    type: String
+                }
+            },
+            started_at: {
+                type: Date
+            },
+            submitted_at: {
+                type: Date
+            },
+            points: {
+                type: Number
+            }
+        }
+    ],
+    student : {
+        student: {
+            _id: {
+                type: String
+            },
+            username: {
+                type: String
+            }
+        },
+        started_at: {
+            type: Date
+        },
+        submitted_at: {
+            type: Date
+        },
+        points: {
+            type: Number
+        }
     }
 })//, options)
 

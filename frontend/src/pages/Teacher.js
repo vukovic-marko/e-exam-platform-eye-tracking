@@ -95,7 +95,9 @@ const Teacher = (props) => {
                     ? !selectedTest 
                         ? <React.Fragment>
                             <NavigationBar username={props.user.username} logout={props.logout} />
-                            <Button onClick={handleCreateTest}>Create Test</Button>
+                            <div style={{marginTop: "1em", width: "100%", display: "flex", flexDirection: "row", justifyContent: "center"}}>    
+                                <Button onClick={handleCreateTest}>Create Test</Button>
+                            </div>
                             <CreateTestModal showModal={showCreateTestModal} setShowModal={setShowCreateTestModal} createTest={createEmptyTest} />
                             <h1 style={{textAlign: 'center', marginTop: 20}}>Created Tests</h1>
                             <TestDeck docs={docs} loadTests={loadTests} token={props.token} caption="View Students" callback={viewStudents} />

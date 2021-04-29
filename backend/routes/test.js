@@ -11,7 +11,7 @@ const { verifyAccessToken } = require('../utils/verifyToken')
 
 const { verifyTeacher, verifyStudent, verifyUser } = require('../utils/verifyUser')
 
-const { validateCreateTest, validateGetTests, validateSubmitAnswers } = require('../validation/test')
+const { validateCreateTest, validateGetTests, validateSubmitAnswers } = require('../validation/test');
 
 const MULTIPLE_CHOICE = 'MULTIPLE_CHOICE';
 const ESSAY = 'ESSAY';
@@ -37,9 +37,6 @@ const MIXED = 'MIXED';
 // ONLY RETURNS TEST ID, TITLE, MAXIMUM NUMBER OF POINTS AND TEACHER INFORMATION
 // TEACHER CAN SEE ONLY TESTS TEACHER'S OWN TESTS
 // STUDENTS CAN SEE TESTS BY ALL TEACHERS
-//
-// TODO SAKRITI STUDENTIMA TESTOVE KOJE SU ZAVRSILI?
-//
 router.get('/', verifyAccessToken, verifyUser, asyncHandler(async (req, res) => {
   const { error } = validateGetTests(req.query);
   if (error) throw createError(400, error.details);
@@ -47,7 +44,9 @@ router.get('/', verifyAccessToken, verifyUser, asyncHandler(async (req, res) => 
   let query = {}
   if (req.user.role === 'teacher') {
     query["teacher._id"] = req.user._id;
-  } 
+  } else if (req.user.role === 'student') {
+    query["students.student._id"] = {$ne: req.user._id};
+  }
 
   Test.paginate(query, { page: req.query.page, limit: req.query.limit }).then(result => {
     if (result.totalPages < result.page) {
@@ -56,6 +55,32 @@ router.get('/', verifyAccessToken, verifyUser, asyncHandler(async (req, res) => 
 
     result.docs.forEach(test => {
       test.questions = undefined;
+    })
+
+    res.status(200).send(result);
+  })
+
+}))
+
+// --------------------------------------------------------------------------------------------
+// GET  /results    (STUDENTS ONLY)
+// --------------------------------------------------------------------------------------------
+// STUDENTS CAN SEE TESTS THEY TOOK
+router.get('/results', verifyAccessToken, verifyStudent, asyncHandler(async (req, res) => {
+  const { error } = validateGetTests(req.query);
+  if (error) throw createError(400, error.details);
+  
+  let query = {}
+  query["students.student._id"] = req.student._id;
+
+  Test.paginate(query, { page: req.query.page, limit: req.query.limit }).then(result => {
+    if (result.totalPages < result.page) {
+      throw createError(400, 'Page does not exist.')
+    }
+
+    result.docs.forEach(test => {
+      test.questions = undefined;
+      test.students = test.students.filter(student => student.student._id == req.student._id)
     })
 
     res.status(200).send(result);
@@ -175,6 +200,25 @@ router.post('/:id', verifyAccessToken, verifyStudent, asyncHandler(async (req, r
 
   })
 
+  try {
+
+    await Test.findByIdAndUpdate(req.params.id.toString(), 
+    { $push : { students: {
+      student: {
+        _id: req.student._id,
+        username: req.student.username
+      },
+      started_at: submittedTest.started_at,
+      submitted_at: submittedTest.submitted_at,
+      points: submittedTest.points
+    }}},
+    {safe: true, upsert: true, new : true}
+    );
+  } catch(err) {
+    throw createError(500, err.message);
+  }
+
+
   await submittedTest.save();
   
   submittedTest.test.questions = undefined;
@@ -240,7 +284,7 @@ router.post('/', verifyAccessToken, verifyTeacher, asyncHandler(async (req, res)
 }))
 
 // --------------------------------------------------------------------------------------------
-// POST  /result/id    (TEACHERS ONLY)
+// GET  /result/id    (TEACHERS ONLY)
 // --------------------------------------------------------------------------------------------
 // TEACHERS CAN SEE ANSWERS AND EYE MOVEMENT DATA FOR A SINGLE STUDENT FOR A SINGLE TEST
 router.get('/result/:id', verifyAccessToken, verifyTeacher, asyncHandler(async (req, res) => {
@@ -255,7 +299,6 @@ router.get('/result/:id', verifyAccessToken, verifyTeacher, asyncHandler(async (
 
   res.status(200).send(submittedTest);
 }))
-
 
 
 

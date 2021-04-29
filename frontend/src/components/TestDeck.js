@@ -26,11 +26,22 @@ const TestDeck = (props) => {
                             <Card.Title className="p-2">
                                 {e.title}
                             </Card.Title>
-                            <Card.Text className="pl-2">
-                                Type: {type} <br />
-                                Max points: {e.test_points} <br />
-                                <Button variant="primary" onClick={() => props.callback(e._id, e.title, type)}>{props.caption}</Button>
-                            </Card.Text>
+                            {props.callback && 
+                                <Card.Text className="pl-2">
+                                    Type: {type} <br />
+                                    Max points: {e.test_points} <br />
+                                    <Button variant="primary" onClick={() => props.callback(e._id, e.title, type)}>{props.caption}</Button>
+                                </Card.Text>
+                            }
+                            {!props.callback && e.students && e.students.length === 1 &&
+                                <Card.Text className="pl-2">
+                                    Type: {type} <br />
+                                    {e.students[0].points
+                                        ? <span>Points: {e.students[0].points}<br />Max points: {e.test_points}</span>
+                                        : <span><br />Max points: {e.test_points} <br /></span>
+                                    }
+                                </Card.Text>
+                            }
                             <Card.Footer>
                                 <small className="text-muted">Teacher: {e.teacher.username}</small>
                             </Card.Footer>
