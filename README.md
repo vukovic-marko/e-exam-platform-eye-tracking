@@ -57,7 +57,6 @@ Potrebno je instalirati nephodan softver i ispratiti sledeće korake.
 
 ### Potreban softver
 
-This is an example of how to list things you need to use the software and how to install them.
 * [Node.js i NPM](https://nodejs.org/en/download/)
 * [Yarn](https://classic.yarnpkg.com/lang/en/)
   ```sh
