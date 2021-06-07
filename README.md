@@ -19,9 +19,6 @@
   </p>
 </p>
 
-
-
-<!-- TABLE OF CONTENTS -->
 <details open="open">
   <summary><h2 style="display: inline-block">Sadržaj</h2></summary>
   <ol>
@@ -44,8 +41,6 @@
   </ol>
 </details>
 
-
-
 ## O projektu
 
 Veb platforma za ocenjivanje znanja uz praćenje pokreta oka.
@@ -58,7 +53,7 @@ Veb platforma za ocenjivanje znanja uz praćenje pokreta oka.
 <!-- GETTING STARTED -->
 ## Uputstvo za instalaciju
 
-Kako biste pokrenuli platformu, potrebno je instalirati potreban softver i ispratiti sledeće korake.
+Potrebno je instalirati nephodan softver i ispratiti sledeće korake.
 
 ### Potreban softver
 
