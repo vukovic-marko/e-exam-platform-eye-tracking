@@ -101,11 +101,34 @@ Potrebno je instalirati nephodan softver i ispratiti sledeće korake.
   
 ## Konfigurisanje
 
-Moguće je konfigurisati ponašanje serverske aplikacije korišćenjem promenljivih okruženja. Moguće je definisati port na kojem se serverska aplikacija pokreće (PORT), lokaciju baze podataka (DB_CONNECTION), šifre za potpisivanje tokena za pristup resursima (ACCESS_TOKEN_SECRET) i za osvežavanje tokena (REFRESH_TOKEN_SECRET), kao i životni vek ovih tokena (ACCESS_TOKEN_EXPIRES_IN, REFRESH_TOKEN_EXPIRES_IN). Jedan od načina za definisanje ovih promenljivih je kreiranjem .env fajla u korenskom folderu serverske aplikacije. U nastavku je dat primer .env fajla.
+Moguće je konfigurisati ponašanje serverske aplikacije korišćenjem promenljivih okruženja. Moguće je definisati:
+ 
+ <ul>
+  <li>
+    PORT - port na kome se serverska aplikacija pokreće,
+  </li>
+  <li>
+    DB_CONNECTION - lokaciju i informacije o bazi podataka,
+  </li>
+  <li>
+    ACCESS_TOKEN_SECRET - šifru za potpisivanje tokena za pristup resursima,
+  </li>
+  <li>
+    ACCESS_TOKEN_EXPIRES_IN - životni vek tokena za pristup resursima,
+  </li>
+  <li>
+    REFRESH_TOKEN_SECRET - šifru za potpisivanje tokena za osvežavanje tokena za pristup resursima i
+  </li>
+  <li>
+    REFRESH_TOKEN_EXPIRES_IN - životni vek tokena za osvežavanje tokena za pristup resursima.
+  </li>
+ </ul>
+
+Jedan od načina za definisanje ovih promenljivih je kreiranjem .env fajla u korenskom folderu serverske aplikacije. U nastavku je dat primer .env fajla.
 
     PORT=5000
     DB_CONNECTION=mongodb://dbUser:dbPass@localhost:27017/test
     ACCESS_TOKEN_SECRET=QnaXFnbREkmQ65SvS/k3dkF1WuwDVbpVmJDW2Sd0nTr+AgX2c18EVpn5B/D/if4WWbG/Gl3AfSVqYAO1JlZQB3jUUMfPuF+FXQhHyp7DpsG4XqjCVZTtdamdlgBPTSdpQoirkQRG6t+5zT92KOPS+ffvPyLwtwYe1yG2PZrXoTxCWLDgfnzt9UapXUGIf757C5lEoUgPtPOYgGmjlzlKUKQ8RsbqtGBMxDIhh0nxbofAhkf4zSYm24DciwqaT+eUtP9+8/+7MrHHS6KFOiTwQpJ0jQ4Jl75+WyZrhxn+lWTweZ0QHU6pyOE/hJ76MFeg3Heto5uDUS0JcDPRs27+jQ==
     REFRESH_TOKEN_SECRET=3ZHu5PfIbegwphGB4vPBlFA4hg9ofvmVcCKKQJJ9UgEjHdU4Xhhhko4nQPySiYjkOUXJ7dKhHtcLBM3kydhBnrnt6k884ikHQgI7Rq7MJveMwqfzi426p9nivpCmIpy2GoRURAGTshTLsk+0vQpEnmmjPNg5pK1hEHwqO7EhpcUpuxmgPXGfStfORsh11vvOyyBdySWQUDSHR25Th2/opYf8EtUYo8qq6pOa3ojnSor+akEVIldCOqSHssFgUb+avwrpgf2xpvUHxc1Mfop+9GQpj+m0bceBEv4jMbxcJGByPcC/aTsiWHrPg0HbDUcWiyBM3BaVD5v/uClChtcqmQ==
-    ACCESS_TOKEN_EXPIRES_IN=11m
-    REFRESH_TOKEN_EXPIRES_IN=21m
+    ACCESS_TOKEN_EXPIRES_IN=20m
+    REFRESH_TOKEN_EXPIRES_IN=7d
