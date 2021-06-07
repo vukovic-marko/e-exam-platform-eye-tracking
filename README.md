@@ -97,7 +97,7 @@ Potrebno je instalirati nephodan softver i ispratiti sledeće korake.
     yarn start
     ```
 9. Pokrenuti softver GazePointer.
-10. Platforma je spremna za korišćenje i dostupna na putanji (http://localhost:3000)[http://localhost:3000]
+10. Platforma je spremna za korišćenje i dostupna na putanji [http://localhost:3000](http://localhost:3000).
   
 ## Konfigurisanje
 
